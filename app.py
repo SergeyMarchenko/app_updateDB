@@ -1,0 +1,279 @@
+import sys
+# import os
+# import mpld3
+# import re
+# os.chdir('Z:\FLNRO\Russell Creek\Data\DB\code_2_db\c02_join_rawDB_and_txt')
+import pandas            as pd
+import numpy             as np
+import streamlit         as st
+from c02_f01_get_config  import get_config
+from c02_f02_get_tables  import get_tables
+from c02_f03_get_db      import get_db
+from c02_f04_get_file    import get_file
+from c02_f05_make_plot_t import make_plot_t
+from c02_f06_col_routes  import col_routes
+from c02_f07_merge_dbfl  import merge_dbfl
+from c02_f08_make_plot   import make_plot
+from c02_f09_col_stats   import col_stats
+from c02_f10_upload_db   import upload_db
+# from streamlit_modal     import Modal
+from collections         import defaultdict
+from datetime            import datetime
+
+
+# z:
+# cd Z:\FLNRO\Russell Creek\Data\DB\code_2_db\c02_join_rawDB_and_txt
+# streamlit run app.py
+
+    
+st.write("""
+# Update an online DataBase table using data from an AWS file
+# """)
+
+#__________________________________________
+#____Read csv file with login details and generate a connection with MySQL database____
+#__________________________________________
+
+st.write("1. DataBase table to join data to")
+path_config = st.file_uploader("1.1 Path to config.csv file to access the DataBase:")
+#
+# path_config = 'Z:/FLNRO/Russell Creek/Data/DB/code_2_db/config.csv'
+#
+if not path_config:
+  st.warning('To proceed upload the file "config.csv" first!')
+  st.stop()
+
+url = get_config(path_config)
+del path_config
+
+
+#__________________________________________
+#____load data from the online database____
+#__________________________________________
+
+new_old = st.radio(
+    "1.2. Choose whether to use data in the text file to update an existing data table or start a new one:",
+    ["Existing table", "New table"],
+    captions = ["", "Uploading text file from AWS (see below) initiates a new dataframe with same (but empty) columns as in the file."])
+
+if new_old == "Existing table":
+    table_names = get_tables(url)
+    db_path = st.selectbox( "1.3. Choose DataBase table to update (reload required if recently updated)", table_names, index = None )
+    #
+    # db_path = 'raw_steph1_CSci_test_upd_20240430'
+    #
+    if not db_path:
+      st.warning('To proceed choose table to update first!')
+      st.stop()
+    del table_names
+
+    db_d, db_h, db_coltyp = get_db(url, db_path)
+
+    with st.expander("Show the current DataBase table"):
+        st.dataframe(db_d)
+else:
+    db_path = "raw_"
+    # st.text_input('Name for the new database table:', "raw_")
+    
+
+"---"
+
+
+#__________________________________________
+#____load data from the text file downloaded from the logger____
+#__________________________________________
+
+st.write("2. File from AWS data logger to be joined")
+
+fl_path = st.file_uploader("Choose AWS data file to join:")
+#
+# fl_path = 'Z:/FLNRO\Russell Creek/Data/1 Steph 1/2023/2023-03-10/CR300Series_Hourly2_2023_03_10_12_38_48.dat'
+# 
+if not fl_path:
+  st.warning('To proceed choose AWS file to be joined!')
+  st.stop()
+
+fl_d, fl_h, fl_coltyp = get_file(fl_path)
+
+with st.expander("Show the AWS file"):
+    st.dataframe(fl_d)
+
+
+if new_old == "New table":
+    db_h      = fl_h
+    db_coltyp = fl_coltyp
+    db_d      = fl_d.head(0)
+    
+
+#__________________________________________
+#____table to map columns in file to columns in database
+#__________________________________________
+"---"
+
+st.write("3. Route columns in the AWS file to columns in the database table")
+
+fig_t = make_plot_t(db_d.index.tolist(), fl_d.index.tolist())
+with st.expander("Show time lines for existing DataBase table and AWS file"):
+    st.plotly_chart(fig_t, use_container_width=True)
+
+col_dict = {key: '' for key in fl_h}
+_, col_dict = col_routes(db_d, fl_d, db_h, fl_h)    #for each column in the data file find the best matching column in the database
+
+
+col = [2.5, 3.5, 0.8, 0.8, 0.8, 0.8, 0.8, 1.2]
+
+r1, r2, r3  = st.columns([col[0], col[1], sum(col[2:])])
+with r1:
+   st.text("AWS file")
+
+with r2:
+   st.text("Database")
+   
+with r3:
+    h = """
+    Statistics for data in DataBase and AWS file for overlapping times:
+        fraction of elements that are exactly the same, %
+        coefficient of correlation
+        fraction of NAN values in DataBase, %
+        fraction of NAN values in AWS file, %
+    Checkbox - click to overwrite non-NaN values in the DataBase
+    by values from for the overlapping time period
+        """
+    st.text("Common time stats and control", help = h)
+
+if new_old == "Existing table":
+    db_h_o = ['add NEW COLUMN to db', 'SKIP the column'] + db_h
+else:
+    db_h_o = [                        'SKIP the column'] + db_h
+
+ow_flag = [False] * len(col_dict)
+count = 0
+for key in col_dict:
+    r1, r2, r3, r4, r5, r6, r7, r8 = st.columns(col)
+    with r1:
+        st.write(key)
+
+    with r2:
+        if col_dict[key] == '':
+            ind = None
+        else:
+            ind = db_h_o.index(col_dict[key])
+        col_dict[key] = st.selectbox(" "   , db_h_o, key = "o_"+key, index = ind, label_visibility="collapsed" )
+        del ind
+        
+    if col_dict[key] != 'add NEW COLUMN to db' and col_dict[key] != 'SKIP the column' and any(fl_d.index.isin(db_d.index)):
+        _, Ne, cc_d, cc_h, nana, nanb = col_stats(db_d, fl_d, col_dict, key)
+        with r3:
+            st.text(Ne)
+        with r4:
+            st.text(cc_d)
+        with r5:
+            st.text(nana)
+        with r6:
+            st.text(nanb)
+    
+    with r7:
+        ow_flag[count] = st.checkbox(' ', False, key = "ow_flag_"+key, label_visibility = 'collapsed')
+        
+    with r8:
+        p = st.button( 'plot', key = "p_"+key, disabled = col_dict[key] == None )
+        
+    count = count + 1
+
+#_______________________
+# group col_dict keys with same values in rows of a list
+repcol = defaultdict(list)
+for key, value in col_dict.items():
+    if value != 'add NEW COLUMN to db' and value != 'SKIP the column':
+        repcol[value].append(key)
+repcol = [keys for keys in repcol.values() if len(keys) > 1]
+
+# warning message in case two columns from file are routed to the same column in database
+if len(repcol)>0:
+    st.warning('Following columns in the AWS file have the same destination:')
+    for row in repcol:
+        st.write(row)
+    st.warning('choose a different destination for one of the columns above to continue!')
+    st.stop()
+
+# merge the existing DataBase table and data in the text file    
+c, col_dict_out = merge_dbfl(db_d, fl_d, col_dict, ow_flag)
+
+# plot to visualize data in the: existing DataBase table, text file, merged dataframe
+for key in col_dict.keys():
+    if st.session_state["p_" + key]:
+        fig = make_plot(db_d, fl_d, c, col_dict, col_dict_out, key)
+        st.plotly_chart(fig, use_container_width=True)
+        
+# modal = Modal(
+#     "Plot",
+#     key="figure_window",
+#     padding   =    2,    # Optional, default value -  20
+#     max_width = 1500     # Optional, default value - 744
+# )
+# open_modal = st.button("plot", key = "p_1")
+# if open_modal:
+#     modal.open()
+
+
+# if modal.is_open():
+#     with modal.container():
+#        fig = make_plot(db_t, db_d, fl_t, fl_d, c, col_dict, "BattV_Avg_Volts")
+#        st.plotly_chart(fig, use_container_width=True)
+"---"
+
+
+# convert columns with TimeStamps back to DateTime strings if they are not meant to be skipped
+if 'time' in fl_coltyp:
+    ind_fl = [i for i, x in enumerate(fl_coltyp) if x == 'time']
+    for i in ind_fl:
+        if fl_h[i] in col_dict_out.keys():
+            c[col_dict_out[fl_h[i]]] = pd.to_datetime( c[col_dict_out[fl_h[i]]] )
+
+elif 'datetime64[ns]' in db_coltyp:
+    ind_db = [i for i, x in enumerate(db_coltyp) if x == 'datetime64[ns]']
+    for i in ind_db:
+        c[db_h[i]] = pd.to_datetime( c[db_h[i]], unit = 'ns' )
+
+
+with st.expander("Show the updated database table"):
+    st.dataframe(c)
+
+
+now = datetime.now()
+now = now.strftime("%Y%m%d")
+db_path_updated = st.text_input('Name for the updated database table:', db_path + '_upd_' + now)
+
+upload = st.button("Update database", key = "p_upd")
+if upload:
+    message = upload_db(c, url, db_path_updated, fl_path, db_path)
+    mm = st.text_area('', message)
+    
+    if np.random.randint(0, 100)>50:
+        st.balloons()
+    else:
+        st.snow()
+    st.cache_data.clear()
+
+
+sys.exit()
+
+
+
+"---"
+
+
+    
+
+
+
+
+
+
+
+    
+  
+
+
+
+
