@@ -2,7 +2,7 @@ import sys
 # import os
 # import mpld3
 # import re
-# os.chdir('Z:\FLNRO\Russell Creek\Data\DB\code_2_db\c02_join_rawDB_and_txt')
+# os.chdir('Z:\FLNRO\Russell Creek\Data\DB\code_2_db\c02_app_updateDB')
 import pandas            as pd
 import numpy             as np
 import streamlit         as st
@@ -10,6 +10,7 @@ from c02_f01_get_config  import get_config
 from c02_f02_get_tables  import get_tables
 from c02_f03_get_db      import get_db
 from c02_f04_get_file    import get_file
+from c02_f04_get_file_alt    import get_file_alt
 from c02_f05_make_plot_t import make_plot_t
 from c02_f06_col_routes  import col_routes
 from c02_f07_merge_dbfl  import merge_dbfl
@@ -22,7 +23,7 @@ from datetime            import datetime
 
 
 # z:
-# cd Z:\FLNRO\Russell Creek\Data\DB\code_2_db\c02_join_rawDB_and_txt
+# cd Z:\FLNRO\Russell Creek\Data\DB\code_2_db\c02_app_updateDB
 # streamlit run app.py
 
     
@@ -37,7 +38,7 @@ st.write("""
 st.write("1. DataBase table to join data to")
 path_config = st.file_uploader("1.1 Path to config.csv file to access the DataBase:")
 #
-# path_config = 'Z:/FLNRO/Russell Creek/Data/DB/code_2_db/config.csv'
+path_config = 'Z:/FLNRO/Russell Creek/Data/DB/code_2_db/config.csv'
 #
 if not path_config:
   st.warning('To proceed upload the file "config.csv" first!')
@@ -83,28 +84,53 @@ else:
 #____load data from the text file downloaded from the logger____
 #__________________________________________
 
-st.write("2. File from AWS data logger to be joined")
+st.write("2. Text file to be joined (from e.g. AWS data logger)")
 
-fl_path = st.file_uploader("Choose AWS data file to join:")
+
+r1, r2 = st.columns([0.8, 0.2])
+with r1:
+    fl_path0 = st.file_uploader("Path to file:")
+    fl_path = fl_path0
+with r2:
+    delim   = st.text_input('Col delimiter:', value = ',', max_chars=1, key='fl_delim', help='Symbol separating columns')
+
 #
 # fl_path = 'Z:/FLNRO\Russell Creek/Data/1 Steph 1/2023/2023-03-10/CR300Series_Hourly2_2023_03_10_12_38_48.dat'
-# 
+#
+
 if not fl_path:
-  st.warning('To proceed choose AWS file to be joined!')
+  st.warning('To proceed choose text file!')
   st.stop()
 
-fl_d, fl_h, fl_coltyp = get_file(fl_path)
+fl_d0 = get_file_alt(fl_path0, delim)
+with st.expander("Show the preliminary read AWS file"):
+    st.dataframe(fl_d0, hide_index = False)
+    
+
+st.write("Settings for the text file reader (column and row numbers are zero-based):")
+r1, r2, r3, r4, r5 = st.columns(5)
+with r1:
+    tcol  = st.text_input('Time col(s):'  , value = '0', key='fl_tcol' , help='Number of column(s) with time stamps. Multiple numbers are to be separated by "," and follow the order: y, m, d, h, m, s')
+with r2:
+    dcol  = st.text_input('Data col(s):'  , value = '1', key='fl_dcol' , help='Number of first column with data, all columns to the right are read too. Multiple numbers are to be separated by "," and give specific columns to be read.')
+with r3:
+    hrow  = st.text_input('Header row:'   , value = '1', key='fl_hrow' , help='Number of the row with column headers.')
+with r4:
+    urow  = st.text_input('Units row:'    , value = '2', key='fl_urow' , help='Number of the row with column units.')
+with r5:
+    drow  = st.text_input('Data row(s):'  , value = '4', key='fl_drow' , help='Number of first row with data. All rows below are read too.')
+
+fl_d, fl_h, fl_coltyp = get_file_alt(fl_d0, tcol, dcol, hrow, urow, drow)
 
 with st.expander("Show the AWS file"):
-    st.dataframe(fl_d)
-
+    st.dataframe(fl_d, hide_index = False)
 
 if new_old == "New table":
     db_h      = fl_h
     db_coltyp = fl_coltyp
     db_d      = fl_d.head(0)
     
-
+sys.exit()
 #__________________________________________
 #____table to map columns in file to columns in database
 #__________________________________________
