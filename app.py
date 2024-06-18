@@ -38,7 +38,7 @@ st.write("""
 
 path_config = st.file_uploader("1 Path to config.csv file with credentials to access the DataBase:")
 #
-path_config = 'Z:/FLNRO/Russell Creek/Data/DB/code_2_db/config.csv'
+# path_config = 'Z:/FLNRO/Russell Creek/Data/DB/code_2_db/config.csv'
 #
 if not path_config:
   st.warning('To proceed upload the file "config.csv" first!')
