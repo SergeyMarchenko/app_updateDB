@@ -35,8 +35,8 @@ st.write("""
 #____Read csv file with login details and generate a connection with MySQL database____
 #__________________________________________
 
-st.write("1. DataBase table to join data to")
-path_config = st.file_uploader("1.1 Path to config.csv file to access the DataBase:")
+
+path_config = st.file_uploader("1 Path to config.csv file with credentials to access the DataBase:")
 #
 path_config = 'Z:/FLNRO/Russell Creek/Data/DB/code_2_db/config.csv'
 #
@@ -49,17 +49,17 @@ del path_config
 
 
 #__________________________________________
-#____load data from the online database____
+#____Load data from the online database____
 #__________________________________________
-
+st.write('2. Define the DataBase table to update')
 new_old = st.radio(
-    "1.2. Choose whether to use data in the text file to update an existing data table or start a new one:",
-    ["Existing table", "New table"],
-    captions = ["", "Uploading text file from AWS (see below) initiates a new dataframe with same (but empty) columns as in the file."])
+    '2.1. New or existing table:',
+    ['Existing table', 'New table'], help = 'Choose whether to use data in the text file to update an existing table in the DataBase or start a new one.',
+    captions = ['',''])
 
 if new_old == "Existing table":
     table_names = get_tables(url)
-    db_path = st.selectbox( "1.3. Choose DataBase table to update (reload required if recently updated)", table_names, index = None )
+    db_path = st.selectbox( "2.2. Choose DataBase table to update (reload required if recently updated)", table_names, index = None )
     #
     # db_path = 'raw_steph1_CSci_test_upd_20240430'
     #
@@ -73,7 +73,7 @@ if new_old == "Existing table":
     with st.expander("Show the current DataBase table"):
         st.dataframe(db_d)
 else:
-    db_path = "raw_"
+    db_path = "raw"
     # st.text_input('Name for the new database table:', "raw_")
     
 
@@ -84,13 +84,12 @@ else:
 #____load data from the text file downloaded from the logger____
 #__________________________________________
 
-st.write("2. Text file to be joined (from e.g. AWS data logger)")
+st.write("3. Text file to be used for updating/initiating of a DataBase table (from e.g. AWS data logger)")
 
 
 r1, r2 = st.columns([0.8, 0.2])
 with r1:
-    fl_path0 = st.file_uploader("Path to file:")
-    fl_path = fl_path0
+    fl_path = st.file_uploader("Path to file:")
 with r2:
     delim   = st.text_input('Col delimiter:', value = ',', max_chars=1, key='fl_delim', help='Symbol separating columns')
 
@@ -102,7 +101,7 @@ if not fl_path:
   st.warning('To proceed choose text file!')
   st.stop()
 
-fl_d0 = get_file_alt(fl_path0, delim)
+fl_d0 = get_file_alt(fl_path, delim)
 with st.expander("Show the preliminary read AWS file"):
     st.dataframe(fl_d0, hide_index = False)
     
@@ -110,15 +109,16 @@ with st.expander("Show the preliminary read AWS file"):
 st.write("Settings for the text file reader (column and row numbers are zero-based):")
 r1, r2, r3, r4, r5 = st.columns(5)
 with r1:
-    tcol  = st.text_input('Time col(s):'  , value = '0', key='fl_tcol' , help='Number of column(s) with time stamps. Multiple numbers are to be separated by "," and follow the order: y, m, d, h, m, s')
+    tcol  = st.text_input('Time col(s):'  , value = '0', key='fl_tcol' , help='Number of column(s) with time stamps. Multiple numbers are to be separated by ","')
 with r2:
-    dcol  = st.text_input('Data col(s):'  , value = '1', key='fl_dcol' , help='Number of first column with data, all columns to the right are read too. Multiple numbers are to be separated by "," and give specific columns to be read.')
+    dcol  = st.text_input('Data col(s):'  , value = '1', key='fl_dcol' , help='Number of first column with data, all columns to the right are read too. If multiple numbers separated by "," are given, only the specific columns are read.')
 with r3:
     hrow  = st.text_input('Header row:'   , value = '1', key='fl_hrow' , help='Number of the row with column headers.')
 with r4:
-    urow  = st.text_input('Units row:'    , value = '2', key='fl_urow' , help='Number of the row with column units.')
+    urow  = st.text_input('Units row:'    , value = '2', key='fl_urow' , help='Number of the row with column units. Leave empty if now such row exists.')
 with r5:
-    drow  = st.text_input('Data row(s):'  , value = '4', key='fl_drow' , help='Number of first row with data. All rows below are read too.')
+    drow  = st.text_input('Data row(s):'  , value = '4', key='fl_drow' , help='Number of first row with data, all rows below are read too.')
+
 
 fl_d, fl_h, fl_coltyp = get_file_alt(fl_d0, tcol, dcol, hrow, urow, drow)
 
@@ -130,7 +130,7 @@ if new_old == "New table":
     db_coltyp = fl_coltyp
     db_d      = fl_d.head(0)
     
-sys.exit()
+
 #__________________________________________
 #____table to map columns in file to columns in database
 #__________________________________________
@@ -262,15 +262,27 @@ elif 'datetime64[ns]' in db_coltyp:
         c[db_h[i]] = pd.to_datetime( c[db_h[i]], unit = 'ns' )
 
 
-with st.expander("Show the updated database table"):
+if new_old == "New table":
+    text = "Show the new DataBase table"
+else:
+    text = "Show the updated DataBase table"
+with st.expander(text):
     st.dataframe(c)
 
 
 now = datetime.now()
 now = now.strftime("%Y%m%d")
-db_path_updated = st.text_input('Name for the updated database table:', db_path + '_upd_' + now)
+if new_old == "New table":
+    text = 'Name for the new DataBase table:'
+else:
+    text = 'Name for the updated DataBase table:'
+db_path_updated = st.text_input(text, db_path + '_upd_' + now)
 
-upload = st.button("Update database", key = "p_upd")
+if new_old == "New table":
+    text = 'Initiate a new DataBase table'
+else:
+    text = 'Update DataBase table'
+upload = st.button(text, key = "p_upd")
 if upload:
     message = upload_db(c, url, db_path_updated, fl_path, db_path)
     mm = st.text_area('', message)
