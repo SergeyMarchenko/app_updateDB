@@ -76,7 +76,6 @@ def get_file_alt(*args):
 
 
     fl_h = fl_d0.iloc[hrow,dcol].tolist()       # extract the rows with headers and units and merge them in one variable
-    st.write(urow)
     if np.isnan(urow):
         fl_u = ['' for _ in range(len(dcol))]
     else:

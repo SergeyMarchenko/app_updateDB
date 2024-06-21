@@ -119,8 +119,9 @@ with r4:
 with r5:
     drow  = st.text_input('Data row(s):'  , value = '4', key='fl_drow' , help='Number of first row with data, all rows below are read too.')
 
-
-fl_d, fl_h, fl_coltyp = get_file_alt(fl_d0, tcol, dcol, hrow, urow, drow)
+reload = st.button('reload the file', key = "p_reload")
+if reload:
+    fl_d, fl_h, fl_coltyp = get_file_alt(fl_d0, tcol, dcol, hrow, urow, drow)
 
 with st.expander("Show the AWS file"):
     st.dataframe(fl_d, hide_index = False)
