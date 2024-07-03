@@ -9,8 +9,7 @@ import streamlit         as st
 from c02_f01_get_config  import get_config
 from c02_f02_get_tables  import get_tables
 from c02_f03_get_db      import get_db
-from c02_f04_get_file    import get_file
-from c02_f04_get_file_alt    import get_file_alt
+from c02_f04_get_file    import get_file_prelim, get_file_defined
 from c02_f05_make_plot_t import make_plot_t
 from c02_f06_col_routes  import col_routes
 from c02_f07_merge_dbfl  import merge_dbfl
@@ -101,7 +100,7 @@ if not fl_path:
   st.warning('To proceed choose text file!')
   st.stop()
 
-fl_d0 = get_file_alt(fl_path, delim)
+fl_d0 = get_file_prelim(fl_path, delim)
 with st.expander("Show the preliminary read AWS file"):
     st.dataframe(fl_d0, hide_index = False)
     
@@ -119,9 +118,7 @@ with r4:
 with r5:
     drow  = st.text_input('Data row(s):'  , value = '4', key='fl_drow' , help='Number of first row with data, all rows below are read too.')
 
-reload = st.button('reload the file', key = "p_reload")
-if reload:
-    fl_d, fl_h, fl_coltyp = get_file_alt(fl_d0, tcol, dcol, hrow, urow, drow)
+fl_d, fl_h, fl_coltyp = get_file_defined(fl_d0, tcol, dcol, hrow, urow, drow)
 
 with st.expander("Show the AWS file"):
     st.dataframe(fl_d, hide_index = False)
