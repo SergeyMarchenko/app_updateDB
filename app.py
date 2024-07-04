@@ -34,8 +34,8 @@ st.write("""
 #____Read csv file with login details and generate a connection with MySQL database____
 #__________________________________________
 
-
-path_config = st.file_uploader("1 Path to config.csv file with credentials to access the DataBase:")
+st.write('1. Path to config.csv file with credentials to access the DataBase:')
+path_config = st.file_uploader('')
 #
 # path_config = 'Z:/FLNRO/Russell Creek/Data/DB/code_2_db/config.csv'
 #
@@ -46,14 +46,14 @@ if not path_config:
 url = get_config(path_config)
 del path_config
 
-
+"---"
 #__________________________________________
 #____Load data from the online database____
 #__________________________________________
 st.write('2. Define the DataBase table to update')
 new_old = st.radio(
     '2.1. New or existing table:',
-    ['Existing table', 'New table'], help = 'Choose whether to use data in the text file to update an existing table in the DataBase or start a new one.',
+    ['Existing table', 'New table'], help = 'Choose whether data in the text file is used to update an existing table in the DataBase or start a new one.',
     captions = ['',''])
 
 if new_old == "Existing table":
@@ -68,8 +68,9 @@ if new_old == "Existing table":
     del table_names
 
     db_d, db_h, db_coltyp = get_db(url, db_path)
-
-    with st.expander("Show the current DataBase table"):
+    
+    # with st.expander("Show the current DataBase table"):
+    if st.button("Show the current DataBase table"):
         st.dataframe(db_d)
 else:
     db_path = "raw"
@@ -90,7 +91,7 @@ r1, r2 = st.columns([0.8, 0.2])
 with r1:
     fl_path = st.file_uploader("Path to file:")
 with r2:
-    delim   = st.text_input('Col delimiter:', value = ',', max_chars=1, key='fl_delim', help='Symbol separating columns')
+    delim   = st.text_input('Column delimiter:', value = ',', max_chars=1, key='fl_delim', help='Symbol separating columns')
 
 #
 # fl_path = 'Z:/FLNRO\Russell Creek/Data/1 Steph 1/2023/2023-03-10/CR300Series_Hourly2_2023_03_10_12_38_48.dat'
@@ -101,7 +102,7 @@ if not fl_path:
   st.stop()
 
 fl_d0 = get_file_prelim(fl_path, delim)
-with st.expander("Show the preliminary read AWS file"):
+if st.button("Show the preliminary read AWS file"):
     st.dataframe(fl_d0, hide_index = False)
     
 
@@ -120,7 +121,7 @@ with r5:
 
 fl_d, fl_h, fl_coltyp = get_file_defined(fl_d0, tcol, dcol, hrow, urow, drow)
 
-with st.expander("Show the AWS file"):
+if st.button("Show the AWS file"):
     st.dataframe(fl_d, hide_index = False)
 
 if new_old == "New table":
@@ -260,27 +261,18 @@ elif 'datetime64[ns]' in db_coltyp:
         c[db_h[i]] = pd.to_datetime( c[db_h[i]], unit = 'ns' )
 
 
-if new_old == "New table":
-    text = "Show the new DataBase table"
-else:
-    text = "Show the updated DataBase table"
-with st.expander(text):
+if st.button("Show the new/updated DataBase table"):
     st.dataframe(c)
 
 
 now = datetime.now()
 now = now.strftime("%Y%m%d")
-if new_old == "New table":
-    text = 'Name for the new DataBase table:'
-else:
-    text = 'Name for the updated DataBase table:'
-db_path_updated = st.text_input(text, db_path + '_upd_' + now)
 
-if new_old == "New table":
-    text = 'Initiate a new DataBase table'
-else:
-    text = 'Update DataBase table'
-upload = st.button(text, key = "p_upd")
+db_path_updated = st.text_input('Name for the new/updated DataBase table:', db_path + '_upd_' + now)
+
+
+
+upload = st.button('Initiate/Update DataBase table', key = "p_upd")
 if upload:
     message = upload_db(c, url, db_path_updated, fl_path, db_path)
     mm = st.text_area('', message)
@@ -290,13 +282,14 @@ if upload:
     else:
         st.snow()
     st.cache_data.clear()
-
+    
+"---"
 
 sys.exit()
 
 
 
-"---"
+
 
 
     
