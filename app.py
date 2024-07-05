@@ -35,7 +35,7 @@ st.write("""
 #__________________________________________
 
 st.write('1. Path to config.csv file with credentials to access the DataBase:')
-path_config = st.file_uploader('')
+path_config = st.file_uploader(' ')
 #
 # path_config = 'Z:/FLNRO/Russell Creek/Data/DB/code_2_db/config.csv'
 #
@@ -69,8 +69,18 @@ if new_old == "Existing table":
 
     db_d, db_h, db_coltyp = get_db(url, db_path)
     
-    # with st.expander("Show the current DataBase table"):
-    if st.button("Show the current DataBase table"):
+    r1, r2 = st.columns(2)
+    with r1:
+        b1 = st.button("Show the current DataBase table")
+    with r2:
+        cb1 = st.checkbox('First 10 and last 2 rows', value = True, help = "Uncheck the box to show the entire table.")
+    # with st.expander("Show the top and bottom of the current DataBase table"):        
+
+    if b1 and cb1:
+        tmp = pd.concat([db_d.head(10), pd.DataFrame(np.nan, index=[0], columns=db_d.columns), db_d.tail(2)], ignore_index=False)
+        st.dataframe(tmp, hide_index = False)
+        del tmp
+    elif b1:
         st.dataframe(db_d)
 else:
     db_path = "raw"
@@ -103,8 +113,8 @@ if not fl_path:
 
 fl_d0 = get_file_prelim(fl_path, delim)
 if st.button("Show the preliminary read AWS file"):
-    st.dataframe(fl_d0, hide_index = False)
-    
+    st.dataframe(fl_d0.head(10), hide_index = False)
+
 
 st.write("Settings for the text file reader (column and row numbers are zero-based):")
 r1, r2, r3, r4, r5 = st.columns(5)
@@ -121,8 +131,21 @@ with r5:
 
 fl_d, fl_h, fl_coltyp = get_file_defined(fl_d0, tcol, dcol, hrow, urow, drow)
 
-if st.button("Show the AWS file"):
+
+r1, r2 = st.columns(2)
+with r1:
+    b2 = st.button("Show the AWS file")
+with r2:
+    cb2 = st.checkbox('First 10 and last 2 rows', value = True, help = "Uncheck the box to show the entire file.")
+
+if b2 and cb2:
+    tmp = pd.concat([fl_d.head(10), fl_d.tail(2)], ignore_index=False)
+    st.dataframe(tmp , hide_index = False)
+    del tmp
+elif b2:
     st.dataframe(fl_d, hide_index = False)
+    
+    
 
 if new_old == "New table":
     db_h      = fl_h
@@ -137,8 +160,8 @@ if new_old == "New table":
 
 st.write("3. Route columns in the AWS file to columns in the database table")
 
-fig_t = make_plot_t(db_d.index.tolist(), fl_d.index.tolist())
-with st.expander("Show time lines for existing DataBase table and AWS file"):
+if st.button("Show time lines for existing DataBase table and AWS file"):
+    fig_t = make_plot_t(db_d.index.tolist(), fl_d.index.tolist())
     st.plotly_chart(fig_t, use_container_width=True)
 
 col_dict = {key: '' for key in fl_h}
@@ -261,7 +284,17 @@ elif 'datetime64[ns]' in db_coltyp:
         c[db_h[i]] = pd.to_datetime( c[db_h[i]], unit = 'ns' )
 
 
-if st.button("Show the new/updated DataBase table"):
+r1, r2 = st.columns(2)
+with r1:
+    b3 = st.button("Show the new/updated DataBase table")
+with r2:
+    cb3 = st.checkbox('First 10 and last 2 rows', value = True, help = "Uncheck the box to show the entire table.")
+
+if b3 and cb3:
+    tmp = pd.concat([c.head(10), c.tail(2)], ignore_index=False)
+    st.dataframe(tmp , hide_index = False)
+    del tmp
+elif b3:
     st.dataframe(c)
 
 
@@ -275,7 +308,7 @@ db_path_updated = st.text_input('Name for the new/updated DataBase table:', db_p
 upload = st.button('Initiate/Update DataBase table', key = "p_upd")
 if upload:
     message = upload_db(c, url, db_path_updated, fl_path, db_path)
-    mm = st.text_area('', message)
+    mm = st.text_area(' ', message)
     
     if np.random.randint(0, 100)>50:
         st.balloons()
