@@ -1,9 +1,9 @@
 import plotly.graph_objects as go
 import streamlit            as st
 
-# fig = make_plot(cols, v, c, d_0)
+# fig = make_plot_clean(cols, v, c, d_0)
 @st.cache_data(show_spinner="Drawing figure...")
-def make_plot(cols, v, c, d_0):
+def make_plot_clean(cols, v, c, d_0):
 
 
     r = cols[cols.iloc[:,0] == v].index[0]

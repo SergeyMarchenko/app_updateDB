@@ -6,19 +6,19 @@ import sys
 import pandas            as pd
 import numpy             as np
 import streamlit         as st
-from f01_get_config  import get_config
-from f02_get_tables  import get_tables
-from f03_get_db      import get_db
-from f04_get_file    import get_file_prelim, get_file_defined
-from f05_make_plot_t import make_plot_t
-from f06_col_routes  import col_routes
-from f07_merge_dbfl  import merge_dbfl
-from f08_make_plot   import make_plot
-from f09_col_stats   import col_stats
-from f10_upload_db   import upload_db
+from f01_get_config     import get_config
+from f02_get_tables     import get_tables
+from f03_get_db         import get_db
+from f04_get_file       import get_file_prelim, get_file_defined
+from f05_make_plot_t    import make_plot_t
+from f06_col_routes     import col_routes
+from f07_merge_dbfl     import merge_dbfl
+from f08_make_plot_raw  import make_plot_raw
+from f09_col_stats      import col_stats
+from f10_upload_db      import upload_db
 # from streamlit_modal     import Modal
-from collections         import defaultdict
-from datetime            import datetime
+from collections        import defaultdict
+from datetime           import datetime
 
 
 # z:
@@ -263,7 +263,7 @@ c, col_dict_out = merge_dbfl(db_d, fl_d, col_dict, ow_flag)
 # plot to visualize data in the: existing DataBase table, text file, merged dataframe
 for key in col_dict.keys():
     if st.session_state["p_" + key]:
-        fig = make_plot(db_d, fl_d, c, col_dict, col_dict_out, key)
+        fig = make_plot_raw(db_d, fl_d, c, col_dict, col_dict_out, key)
         st.plotly_chart(fig, use_container_width=True)
         
 # modal = Modal(

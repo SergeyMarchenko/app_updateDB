@@ -9,14 +9,14 @@ import pandas               as pd
 import plotly.graph_objects as go
 import streamlit            as st
 
-# fig = make_plot(db_d, fl_d, c, col_dict, key)
+# fig = make_plot_raw(db_d, fl_d, c, col_dict, key)
 @st.cache_data(show_spinner="Drawing figure...")
-def make_plot(db_d, fl_d, c, col_dict, col_dict_out, key):
+def make_plot_raw(db_d, fl_d, c, col_dict, col_dict_out, key):
     # key = "AirTemp_Avg_Deg_C"
     b = fl_d[             key ].squeeze() # AWS data file
     if  col_dict[key] == "SKIP the column":
             
-        s2 = go.Scatter(x=b.index, y=b, name='AWS file'         , mode='markers')
+        s2 = go.Scattergl(x=b.index, y=b, name='AWS file'         , mode='markers')
         s2.marker = dict(color = 'rgba(204,  0,   0, 0)', size = 4, line = dict(color = 'rgba(204,  0,  0, 1)', width = 1))
         
         fig = go.Figure(data=[s2])
@@ -26,8 +26,8 @@ def make_plot(db_d, fl_d, c, col_dict, col_dict_out, key):
     elif col_dict[key] == "add NEW COLUMN to db":
         m =    c[col_dict_out[key]]                                    # updated database table
         
-        s2 = go.Scatter(x=b.index, y=b, name='AWS file'         , mode='markers')
-        s3 = go.Scatter(x=m.index, y=m, name='updated database' , mode='markers')
+        s2 = go.Scattergl(x=b.index, y=b, name='AWS file'         , mode='markers')
+        s3 = go.Scattergl(x=m.index, y=m, name='updated database' , mode='markers')
 
         s2.marker = dict(color = 'rgba(204,  0,   0, 0)', size = 4, line = dict(color = 'rgba(204,  0,  0, 1)', width = 1))
         s3.marker = dict(color = 'rgba(  0,  0,   0, 0)', size = 7, line = dict(color = 'rgba(  0,  0,  0, 1)', width = 1))
@@ -82,9 +82,9 @@ def make_plot(db_d, fl_d, c, col_dict, col_dict_out, key):
             t = "Note: showing data only for the time period covered by the AWS data file and ca 30 first days of the initial DataBase"
         
         if a.size > 0:
-            s1 = go.Scatter(x=a.index, y=a, name='initial DataBase' , mode='markers')
-        s2     = go.Scatter(x=b.index, y=b, name='AWS file'         , mode='markers')
-        s3     = go.Scatter(x=m.index, y=m, name='updated DataBase' , mode='markers')
+            s1 = go.Scattergl(x=a.index, y=a, name='initial DataBase' , mode='markers')
+        s2     = go.Scattergl(x=b.index, y=b, name='AWS file'         , mode='markers')
+        s3     = go.Scattergl(x=m.index, y=m, name='updated DataBase' , mode='markers')
         
         if a.size > 0:
             s1.marker = dict(color = 'rgba( 61, 133, 198, 0)', size = 2, line = dict(color = 'rgba( 61, 133, 198, 1)', width = 1))        

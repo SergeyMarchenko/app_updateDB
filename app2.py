@@ -12,7 +12,7 @@ from f01_get_config         import get_config
 from f10_upload_db          import upload_db
 from f11_get_db_loop        import get_db_loop
 from f13_raw_to_clean_loop  import raw_to_clean_loop
-from f14_make_plot          import make_plot
+from f14_make_plot_clean    import make_plot_clean
 from f15_sites_tables_cols  import sites_tables_cols
 
 st.title('raw_ -> clean_')
@@ -124,7 +124,7 @@ if st.button("Plot", help = "Plot data from raw tables and clean table"):
       st.warning('To proceed choose the variable to plot first!')
       st.stop()
       
-    fig = make_plot(cols, v, c, d_0)
+    fig = make_plot_clean(cols, v, c, d_0)
     st.plotly_chart(fig, use_container_width=True)
     
 "---"    
