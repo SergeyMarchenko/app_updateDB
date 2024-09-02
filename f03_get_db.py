@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Mar 14 11:35:54 2024
-
-@author: marchenks
-"""
 import numpy as np
 import pandas     as pd
 import streamlit  as st

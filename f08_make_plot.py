@@ -9,7 +9,7 @@ import pandas               as pd
 import plotly.graph_objects as go
 import streamlit            as st
 
-# fig = make_plot(db_t, db_d, fl_t, fl_d, c, col_dict, key)
+# fig = make_plot(db_d, fl_d, c, col_dict, key)
 @st.cache_data(show_spinner="Drawing figure...")
 def make_plot(db_d, fl_d, c, col_dict, col_dict_out, key):
     # key = "AirTemp_Avg_Deg_C"

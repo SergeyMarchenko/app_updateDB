@@ -22,8 +22,6 @@ def col_routes(db_d, fl_d, db_h, fl_h):
     cc_h = np.full((db_d.shape[1], fl_d.shape[1]), np.nan) #                Levenshtein distancebetween   ...   names        of          columns         ...
     for     fl_c in range(0,fl_d.shape[1]):
         for db_c in range(0,db_d.shape[1]):
-            print(fl_c)
-            print(db_c)
             fl_col = fl_d.iloc[fl_ind_com,fl_c].reset_index(drop=True)  # file     values for common time stamps
             db_col = db_d.iloc[db_ind_com,db_c].reset_index(drop=True)  # database           ...
             fl_col = pd.to_numeric(fl_col)

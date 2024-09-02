@@ -10,21 +10,19 @@ import streamlit as st
 # fl_path = 'Z:/FLNRO\Russell Creek/Data/2 Steph 2/2022/2022-09-12/CR200 Series_Hourly1_2022-09-14T08-11.dat'   # CSci data file
 # fl_path = 'Z:/FLNRO/Russell Creek/Data/DB/data_0_raw/1 Steph 1/hobo\Steph_1_3.csv'                            # hobo data file
 # delim = ';'
-
-# tcol = '1,2,3,4,5,6'
-# dcol = '7'
-# hrow = '1'
-# urow = '2'
-# drow = '4'
+# rskip = '1'
+# tcol  = '0'
+# dcol  = '2'
+# hrow  = '1'
+# urow  = '2'
+# drow  = '4'
 
 
 @st.cache_data(show_spinner="Fetching file...")
-def get_file_prelim(fl_path, delim):
-
-    # with open(fl_path, 'r') as readFile:
-        # fl_d0  = pd.read_csv(readFile, sep = delim, index_col=False, low_memory=False)
-    fl_d0      = pd.read_csv(fl_path , sep = delim, index_col=False, low_memory=False)
-            
+def get_file_prelim(fl_path, delim, rskip):
+    rskip = int(rskip)
+    fl_d0      = pd.read_csv(fl_path , sep = delim, index_col=False, low_memory=False, skiprows = rskip)
+                
     fl_d0.loc[-1] = fl_d0.columns.tolist()  # Add headers as a row at the end of the DataFrame
     fl_d0.index = fl_d0.index + 1           # Increment all index values by 1
     fl_d0 = fl_d0.sort_index()
@@ -51,6 +49,7 @@ def get_file_defined(fl_d0, tcol, dcol, hrow, urow, drow):
     
     # Convert the strings with numbers of rows for headers, units and data to a list of integers       
     hrow = int(hrow)
+            
     if len(urow)>0:
         urow = int(urow)
     else:
@@ -60,6 +59,8 @@ def get_file_defined(fl_d0, tcol, dcol, hrow, urow, drow):
     
     fl_t = fl_d0.iloc[drow:, tcol]
     if fl_t.shape[1] == 6:
+        fl_t = fl_t.astype(int)
+        fl_t = fl_t.astype(str)
         fl_t = fl_t.iloc[:,0] + '-' + fl_t.iloc[:,1] + '-' + fl_t.iloc[:,2] + ' ' + fl_t.iloc[:,3] + ':' + fl_t.iloc[:,4] + ':' + fl_t.iloc[:,5]
         fl_t = pd.to_datetime(fl_t)
         fl_t = pd.DataFrame({ 't':fl_t})
@@ -98,10 +99,11 @@ def get_file_defined(fl_d0, tcol, dcol, hrow, urow, drow):
     fl_h = fl_d.columns.tolist()
 
 
-    
+
     fl_coltyp = []
     for i in range(0,len(fl_h)):                #     ... convert strings in columns to numbers and, when strings are time stamps, to DateTime and then to number of seconds
-        if any(fl_d.iloc[:,i].str.contains(':', na=False)):
+        # if any(fl_d.iloc[:,i].str.contains(':', na=False)):
+        if fl_d.iloc[:,i].astype(str).str.contains(':', na=False).any():
             fl_d.iloc[:,i] = pd.to_numeric( pd.to_datetime( fl_d.iloc[:,i] ) )
             fl_d.iloc[fl_d.iloc[:,i]<0,i] = np.nan
             fl_coltyp.append("time")

@@ -2,27 +2,27 @@ import sys
 # import os
 # import mpld3
 # import re
-# os.chdir('Z:\FLNRO\Russell Creek\Data\DB\code_2_db\c02_app_updateDB')
+# os.chdir('Z:\FLNRO\Russell Creek\Data\DB\code_2_db\c02_app')
 import pandas            as pd
 import numpy             as np
 import streamlit         as st
-from c02_f01_get_config  import get_config
-from c02_f02_get_tables  import get_tables
-from c02_f03_get_db      import get_db
-from c02_f04_get_file    import get_file_prelim, get_file_defined
-from c02_f05_make_plot_t import make_plot_t
-from c02_f06_col_routes  import col_routes
-from c02_f07_merge_dbfl  import merge_dbfl
-from c02_f08_make_plot   import make_plot
-from c02_f09_col_stats   import col_stats
-from c02_f10_upload_db   import upload_db
+from f01_get_config  import get_config
+from f02_get_tables  import get_tables
+from f03_get_db      import get_db
+from f04_get_file    import get_file_prelim, get_file_defined
+from f05_make_plot_t import make_plot_t
+from f06_col_routes  import col_routes
+from f07_merge_dbfl  import merge_dbfl
+from f08_make_plot   import make_plot
+from f09_col_stats   import col_stats
+from f10_upload_db   import upload_db
 # from streamlit_modal     import Modal
 from collections         import defaultdict
 from datetime            import datetime
 
 
 # z:
-# cd Z:\FLNRO\Russell Creek\Data\DB\code_2_db\c02_app_updateDB
+# cd Z:\FLNRO\Russell Creek\Data\DB\code_2_db\c02_app
 # streamlit run app.py
 
     
@@ -60,7 +60,7 @@ if new_old == "Existing table":
     table_names = get_tables(url)
     db_path = st.selectbox( "2.2. Choose DataBase table to update (reload required if recently updated)", table_names, index = None )
     #
-    # db_path = 'raw_steph1_CSci_test_upd_20240430'
+    # db_path = 'raw_RussellMain_hobo'
     #
     if not db_path:
       st.warning('To proceed choose table to update first!')
@@ -73,7 +73,7 @@ if new_old == "Existing table":
     with r1:
         b1 = st.button("Show the current DataBase table")
     with r2:
-        cb1 = st.checkbox('First 10 and last 2 rows', value = True, help = "Uncheck the box to show the entire table.")
+        cb1 = st.checkbox('First 10 and last 2 rows', value = True, help = "Uncheck the box to show the entire table.", key = 'cb1')
     # with st.expander("Show the top and bottom of the current DataBase table"):        
 
     if b1 and cb1:
@@ -96,27 +96,35 @@ else:
 
 st.write("3. Text file to be used for updating/initiating of a DataBase table (from e.g. AWS data logger)")
 
-
+# fl_path = 'Z:\FLNRO\Russell Creek\Data\DB\data_1_legacy\legacy_non_upd\S1_CSci.txt'
+# delim = ';'
+# rskip = '1'
+# tcol  = '1,2,3,4,5,6'
+# dcol  = '7'
+# hrow  = '0'
+# urow  = '1'
+# drow  = '3'
+    
 r1, r2 = st.columns([0.8, 0.2])
 with r1:
     fl_path = st.file_uploader("Path to file:")
 with r2:
-    delim   = st.text_input('Column delimiter:', value = ',', max_chars=1, key='fl_delim', help='Symbol separating columns')
-
-#
-# fl_path = 'Z:/FLNRO\Russell Creek/Data/1 Steph 1/2023/2023-03-10/CR300Series_Hourly2_2023_03_10_12_38_48.dat'
-#
+    delim   = st.text_input('Column delimiter:' , value = ',', max_chars=1, key='fl_delim', help='Symbol separating columns')
+    rskip   = st.text_input('N of rows to skip:', value = '1', key='fl_rskip' , help='Number of rows to skip. Number of columns should should be the same as in all rows')
 
 if not fl_path:
   st.warning('To proceed choose text file!')
   st.stop()
 
-fl_d0 = get_file_prelim(fl_path, delim)
-if st.button("Show the preliminary read AWS file"):
+fl_d0 = get_file_prelim(fl_path, delim, rskip)
+
+with st.expander("Show the preliminary read AWS file"):
+# if st.button("Show the preliminary read AWS file"):
     st.dataframe(fl_d0.head(10), hide_index = False)
 
 
-st.write("Settings for the text file reader (column and row numbers are zero-based):")
+st.write("Settings for the text file reader, column and row numbers are given with reference to the preliminary read file:")
+
 r1, r2, r3, r4, r5 = st.columns(5)
 with r1:
     tcol  = st.text_input('Time col(s):'  , value = '0', key='fl_tcol' , help='Number of column(s) with time stamps. Multiple numbers are to be separated by ","')
@@ -129,14 +137,19 @@ with r4:
 with r5:
     drow  = st.text_input('Data row(s):'  , value = '4', key='fl_drow' , help='Number of first row with data, all rows below are read too.')
 
+
+
+    
 fl_d, fl_h, fl_coltyp = get_file_defined(fl_d0, tcol, dcol, hrow, urow, drow)
+
+del fl_d0
 
 
 r1, r2 = st.columns(2)
 with r1:
     b2 = st.button("Show the AWS file")
 with r2:
-    cb2 = st.checkbox('First 10 and last 2 rows', value = True, help = "Uncheck the box to show the entire file.")
+    cb2 = st.checkbox('First 10 and last 2 rows', value = True, help = "Uncheck the box to show the entire file.", key = 'cb2')
 
 if b2 and cb2:
     tmp = pd.concat([fl_d.head(10), fl_d.tail(2)], ignore_index=False)
@@ -288,7 +301,7 @@ r1, r2 = st.columns(2)
 with r1:
     b3 = st.button("Show the new/updated DataBase table")
 with r2:
-    cb3 = st.checkbox('First 10 and last 2 rows', value = True, help = "Uncheck the box to show the entire table.")
+    cb3 = st.checkbox('First 10 and last 2 rows', value = True, help = "Uncheck the box to show the entire table.", key = 'cb3')
 
 if b3 and cb3:
     tmp = pd.concat([c.head(10), c.tail(2)], ignore_index=False)
@@ -307,8 +320,10 @@ db_path_updated = st.text_input('Name for the new/updated DataBase table:', db_p
 
 upload = st.button('Initiate/Update DataBase table', key = "p_upd")
 if upload:
-    message = upload_db(c, url, db_path_updated, fl_path, db_path)
-    mm = st.text_area(' ', message)
+    m3 = upload_db(c, url, db_path_updated)
+    m1 = 'DataBase table "' + db_path + '" updated '
+    m2 = 'using data from file "' + fl_path.name + '"'
+    mm = st.text_area(' ', m1 + '\n' + m2 + '\n' + m3)
     
     if np.random.randint(0, 100)>50:
         st.balloons()
