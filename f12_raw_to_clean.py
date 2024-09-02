@@ -1,7 +1,7 @@
-import streamlit  as st
-import pandas     as pd
-import numpy      as np
-from   mean_deg            import mean_deg
+import streamlit     as st
+import pandas        as pd
+import numpy         as np
+from   f16_mean_deg  import mean_deg
 
 # d1, d2 = raw_to_clean(cols, tb, d0)
 @st.cache_data(show_spinner="Processing raw table...")

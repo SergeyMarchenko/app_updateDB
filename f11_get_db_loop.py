@@ -1,5 +1,5 @@
 # import streamlit  as st
-from c02_f03_get_db      import get_db
+from f03_get_db      import get_db
 
 # d_0 = get_db_loop(cols, url)
 # @st.cache_data(show_spinner="Downloading raw tables...")
