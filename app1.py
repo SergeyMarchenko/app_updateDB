@@ -60,7 +60,7 @@ if new_old == "Existing table":
     table_names = get_tables(url)
     db_path = st.selectbox( "2.2. Choose DataBase table to update (reload required if recently updated)", table_names, index = None )
     #
-    # db_path = 'raw_RussellMain_hobo'
+    # db_path = 'raw_Steph8_CSci'
     #
     if not db_path:
       st.warning('To proceed choose table to update first!')
@@ -96,11 +96,11 @@ else:
 
 st.write("3. Text file to be used for updating/initiating of a DataBase table (from e.g. AWS data logger)")
 
-# fl_path = 'Z:\FLNRO\Russell Creek\Data\DB\data_1_legacy\legacy_non_upd\S1_CSci.txt'
-# delim = ';'
+# fl_path = 'Z:/FLNRO/Russell Creek/Data/8 Steph 8/2023/2023-10-23/CR200 Series_Hourly2_2023-10-25T10-50.dat'
+# delim = ','
 # rskip = '1'
-# tcol  = '1,2,3,4,5,6'
-# dcol  = '7'
+# tcol  = '0'
+# dcol  = '2'
 # hrow  = '0'
 # urow  = '1'
 # drow  = '3'
@@ -129,13 +129,13 @@ r1, r2, r3, r4, r5 = st.columns(5)
 with r1:
     tcol  = st.text_input('Time col(s):'  , value = '0', key='fl_tcol' , help='Number of column(s) with time stamps. Multiple numbers are to be separated by ","')
 with r2:
-    dcol  = st.text_input('Data col(s):'  , value = '1', key='fl_dcol' , help='Number of first column with data, all columns to the right are read too. If multiple numbers separated by "," are given, only the specific columns are read.')
+    dcol  = st.text_input('Data col(s):'  , value = '2', key='fl_dcol' , help='Number of first column with data, all columns to the right are read too. If multiple numbers separated by "," are given, only the specific columns are read.')
 with r3:
-    hrow  = st.text_input('Header row:'   , value = '1', key='fl_hrow' , help='Number of the row with column headers.')
+    hrow  = st.text_input('Header row:'   , value = '0', key='fl_hrow' , help='Number of the row with column headers.')
 with r4:
-    urow  = st.text_input('Units row:'    , value = '2', key='fl_urow' , help='Number of the row with column units. Leave empty if now such row exists.')
+    urow  = st.text_input('Units row:'    , value = '1', key='fl_urow' , help='Number of the row with column units. Leave empty if now such row exists.')
 with r5:
-    drow  = st.text_input('Data row(s):'  , value = '4', key='fl_drow' , help='Number of first row with data, all rows below are read too.')
+    drow  = st.text_input('Data row(s):'  , value = '3', key='fl_drow' , help='Number of first row with data, all rows below are read too.')
 
 
 
