@@ -4,7 +4,7 @@ import pandas    as pd
 def sites_tables_cols():
     sites     = ['S1', 'S2', 'S4', 'S6']
     
-    tables_S1 = ['clean_Steph1'  ,'aggregation_method'  , 'min', 'max', 'raw_Steph1_CSci_upd'  ,'raw_Steph1_hobo']
+    tables_S1 = ['clean_Steph1'  ,'aggregation_method'  , 'min', 'max', 'raw_Steph1_CSci'  ,'raw_Steph1_hobo']
     cols_S1 = pd.DataFrame([
     ['DateTime'         ,''           ,   0 ,   0         ,'t'                  ,'t'                      ],
     ['Air_Temp'	    	,'mean'       , -40 ,  40         ,'AirTemp_Avg_Deg_C'   ,'Temp_degC'             ],
