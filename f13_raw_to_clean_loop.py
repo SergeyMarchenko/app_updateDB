@@ -9,7 +9,7 @@ def raw_to_clean_loop(cols, d_0):
     d_2 = []
     for tb in range(4,cols.shape[1]):
         d0 = d_0[tb-4]
-        d1, d2 = raw_to_clean(cols, tb, d0)            
+        d1, d2 = raw_to_clean(cols, tb, d0)  
         d_1.append(d1)       # column-consistent and filtered
         d_2.append(d2)       # resampled to an even 1h time grid
     

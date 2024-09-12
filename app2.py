@@ -16,7 +16,7 @@ from f14_make_plot_clean    import make_plot_clean
 from f15_sites_tables_cols  import sites_tables_cols
 
 st.title('raw_ -> clean_')
-st.header('Process raw_* tables with data collected at one site using different installations and merge them to a single clean_* table.', divider="green")
+st.header('Process raw_* tables with data collected at one site using different installations and merge them to a single clean_* table.', divider='green')
 
 
 #____Read text files with login details and prepare to connect to the MySQL database,
@@ -127,7 +127,7 @@ if st.button("Plot", help = "Plot data from raw tables and clean table"):
     fig = make_plot_clean(cols, v, c, d_0)
     st.plotly_chart(fig, use_container_width=True)
     
-"---"    
+"---"
     
 # Export table to database
 db_path_updated = st.text_input('Name for the clean DataBase table:', db_path_updated)

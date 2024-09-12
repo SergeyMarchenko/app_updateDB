@@ -3,41 +3,44 @@ import sys
 # import mpld3
 # import re
 # os.chdir('Z:\FLNRO\Russell Creek\Data\DB\code_2_db\c02_app')
-import pandas            as pd
-import numpy             as np
-import streamlit         as st
-from f01_get_config     import get_config
-from f02_get_tables     import get_tables
-from f03_get_db         import get_db
-from f04_get_file       import get_file_prelim, get_file_defined
-from f05_make_plot_t    import make_plot_t
-from f06_col_routes     import col_routes
-from f07_merge_dbfl     import merge_dbfl
-from f08_make_plot_raw  import make_plot_raw
-from f09_col_stats      import col_stats
-from f10_upload_db      import upload_db
+import pandas               as pd
+import numpy                as np
+from   sqlalchemy           import create_engine, text
+import streamlit            as st
+import plotly.graph_objects as go
+from f01_get_config         import get_config
+from f02_get_tables         import get_tables
+from f03_get_db             import get_db
+from f04_get_file           import get_file_prelim, get_file_defined
+from f05_make_plot_t        import make_plot_t
+from f06_col_routes         import col_routes
+from f07_merge_dbfl         import merge_dbfl
+from f08_make_plot_raw      import make_plot_raw
+from f09_col_stats          import col_stats
+from f10_upload_db          import upload_db
+from f12_raw_to_clean       import raw_to_clean
+from f14_make_plot_clean    import make_plot_clean
+from f15_sites_tables_cols  import sites_tables_cols
 # from streamlit_modal     import Modal
-from collections        import defaultdict
-from datetime           import datetime
+from collections            import defaultdict
+from datetime               import datetime, timedelta
 
 
 # z:
 # cd Z:\FLNRO\Russell Creek\Data\DB\code_2_db\c02_app
-# streamlit run app.py
+# streamlit run app1.py
 
     
-st.write("""
-# Update or initiate
-# an online DataBase table
-# using data from an AWS file
-# """)
+st.header('Update or initiate an online DataBase table')
+st.header('using data from an AWS file', divider='green')
+
 
 #__________________________________________
 #____Read csv file with login details and generate a connection with MySQL database____
 #__________________________________________
 
-st.write('1. Path to config.csv file with credentials to access the DataBase:')
-path_config = st.file_uploader(' ')
+st.subheader('1. DataBase access')
+path_config = st.file_uploader('Path to config.csv file with credentials to access the DataBase:')
 #
 # path_config = 'Z:/FLNRO/Russell Creek/Data/DB/code_2_db/config.csv'
 #
@@ -48,11 +51,11 @@ if not path_config:
 url = get_config(path_config)
 del path_config
 
-"---"
+st.header('', divider='green')
 #__________________________________________
 #____Load data from the online database____
 #__________________________________________
-st.write('2. Define the DataBase table to update')
+st.subheader('2. Choose DataBase table to update')
 new_old = st.radio(
     '2.1. New or existing table:',
     ['Existing table', 'New table'], help = 'Choose whether data in the text file is used to update an existing table in the DataBase or start a new one.',
@@ -62,7 +65,7 @@ if new_old == "Existing table":
     table_names = get_tables(url)
     db_path = st.selectbox( "2.2. Choose DataBase table to update (reload required if recently updated)", table_names, index = None )
     #
-    # db_path = 'raw_Steph8_CSci'
+    # db_path = 'raw_Steph1_CSci'
     #
     if not db_path:
       st.warning('To proceed choose table to update first!')
@@ -89,16 +92,16 @@ else:
     # st.text_input('Name for the new database table:', "raw_")
     
 
-"---"
+st.header('', divider='green')
 
 
 #__________________________________________
 #____load data from the text file downloaded from the logger____
 #__________________________________________
 
-st.write("3. Text file to be used for updating/initiating of a DataBase table (from e.g. AWS data logger)")
+st.subheader("3. Choose text file")
 
-# fl_path = 'Z:/FLNRO/Russell Creek/Data/8 Steph 8/2023/2023-10-23/CR200 Series_Hourly2_2023-10-25T10-50.dat'
+# fl_path = 'Z:/FLNRO/Russell Creek/Data/1 Steph 1/2024/2024_04_18/Steph1_Hourly1_2023-11-30T09-52.dat'
 # delim = ','
 # rskip = '1'
 # tcol  = '0'
@@ -109,7 +112,7 @@ st.write("3. Text file to be used for updating/initiating of a DataBase table (f
     
 r1, r2 = st.columns([0.8, 0.2])
 with r1:
-    fl_path = st.file_uploader("Path to file:")
+    fl_path = st.file_uploader("Path to the file to be used for updating/initiating a DataBase table (from e.g. AWS data logger):")
 with r2:
     delim   = st.text_input('Column delimiter:' , value = ',', max_chars=1, key='fl_delim', help='Symbol separating columns')
     rskip   = st.text_input('N of rows to skip:', value = '1', key='fl_rskip' , help='Number of rows to skip. Number of columns should should be the same as in all rows')
@@ -167,13 +170,12 @@ if new_old == "New table":
     db_coltyp = fl_coltyp
     db_d      = fl_d.head(0)
     
-
+st.header('', divider='green')
 #__________________________________________
 #____table to map columns in file to columns in database
 #__________________________________________
-"---"
 
-st.write("3. Route columns in the AWS file to columns in the database table")
+st.subheader("3. Route AWS file columns to DataBase table columns")
 
 if st.button("Show time lines for existing DataBase table and AWS file"):
     fig_t = make_plot_t(db_d.index.tolist(), fl_d.index.tolist())
@@ -283,7 +285,6 @@ for key in col_dict.keys():
 #     with modal.container():
 #        fig = make_plot(db_t, db_d, fl_t, fl_d, c, col_dict, "BattV_Avg_Volts")
 #        st.plotly_chart(fig, use_container_width=True)
-"---"
 
 
 # convert columns with TimeStamps back to DateTime strings if they are not meant to be skipped
@@ -298,6 +299,11 @@ elif 'datetime64[ns]' in db_coltyp:
     for i in ind_db:
         c[db_h[i]] = pd.to_datetime( c[db_h[i]], unit = 'ns' )
 
+st.header('', divider='green')
+
+
+#_______________________
+st.subheader('4. Update/initiate raw_ table')
 
 r1, r2 = st.columns(2)
 with r1:
@@ -319,8 +325,7 @@ now = now.strftime("%Y%m%d")
 db_path_updated = st.text_input('Name for the new/updated DataBase table:', db_path + '_upd_' + now)
 
 
-
-upload = st.button('Initiate/Update DataBase table', key = "p_upd")
+upload = st.button('Initiate/Update DataBase table', key = 'p_upd')
 if upload:
     m3 = upload_db(c, url, db_path_updated)
     m1 = 'DataBase table "' + db_path + '" updated '
@@ -333,8 +338,119 @@ if upload:
         st.snow()
     st.cache_data.clear()
     
+st.header('', divider='green')
+
+
+#_______________________
+st.subheader('5. Update clean_ table')
+st.markdown(''':red[Stop! Have you forgotten Hourly2?]''')
+st.write('If the logger generates more than one data table simultaneously, the clean_ table is to be updated only after when the raw_ table has been updated using all files from the data logger.')
+
+# if not 'mm' in locals():
+#     st.warning('To proceed update the raw_ table first!')
+#     st.stop()
+    
+sites, cols_S1, cols_S2, cols_S4, cols_S6 = sites_tables_cols()
+if   '1' in db_path:
+    ind = 0
+elif '2' in db_path:
+    ind = 1
+elif '4' in db_path:
+    ind = 2
+elif '6' in db_path:
+    ind = 3
+    
+clean_site = st.selectbox( "Choose site profile for generating the clean_ table ", sites, index = ind )
+if   clean_site == 'S1':
+        cols = cols_S1
+elif clean_site == 'S2':
+        cols = cols_S2
+elif clean_site == 'S4':
+        cols = cols_S4
+elif clean_site == 'S6':
+        cols = cols_S6
+
+if 'd_2' not in st.session_state:
+    st.session_state.d_2 = []
+r1, r2, r3 = st.columns(3)
+with r1:
+    gen_clean = st.button('Generate the clean_ table', key = 'p_gen_clean', help = "Using the updated raw_ table a table in clean_ format will be generated for the times covered by the AWS file and 15 days preceding that.")
+with r2:
+    b4  = st.button("Show the clean_ table")
+with r3:
+    cb4 = st.checkbox('First 10 and last 2 rows', value = True, help = "Uncheck the box to show the entire table.", key = 'cb4')
+
+if gen_clean:
+    t_last = fl_d.index[0] - timedelta(days = 15)
+    d_0 = c[c.index > t_last].reset_index()
+    _, d_2 = raw_to_clean(cols, 4, d_0)
+    m = d_2.index.month > 9   # Add water year column
+    d_2.insert( 0, 'WatYr', d_2.index.year+1*m.astype(int) )
+    st.session_state.d_2 = d_2
+
+
+if b4:
+    st.session_state.d_2
+    if st.session_state.d_2 == []:
+        st.warning('To proceed generate clean_ table first!')
+        st.stop()
+    d_2 = st.session_state.d_2
+    if cb4:
+        st.dataframe(pd.concat([d_2.head(10), d_2.tail(2)], ignore_index=False) , hide_index = False)
+    else:
+        st.dataframe(d_2)
+
+
+load_clean = st.button('Load the current (not updated) clean_ table from DataBase', key = 'p_load_clean', help = "This will download the current clean_ table from the DataBase.")
+if load_clean:
+    # download existing clean_ table
+    engine = create_engine(url)
+    with engine.connect() as connection:
+        C = pd.read_sql(f"SELECT * FROM {cols.columns[0]}", connection)
+    C.set_index('t', inplace=True)
+
+
+
+D = C.copy()
+D.update(d_2)
+D = pd.concat([D, d_2.loc[~d_2.index.isin(D.index)]])
+    
+"---"
+# plotting
+v = st.selectbox( "Choose a variable to plot", cols.iloc[1:,0], index = None )
+# v = "Air_Temp"
+
+if st.button("Plot", help = "Plot data from raw and clean tables"):
+    if not v:
+      st.warning('To proceed choose the variable to plot first!')
+      st.stop()
+      
+    fig = make_plot_clean(cols, v, C, [d_0])
+    s = go.Scattergl(x=D.index,
+                     y=D[v],
+                     name=cols.columns[0] + ' (updated): ' + v,
+                     mode='markers')
+    s.marker.color = 'rgb(214,39,40)'
+    s.marker.size = 1
+    s.marker.line.color = 'rgb(214,39,40)'
+    s.marker.line.width = 1
+    fig.add_trace(s)
+    
+    # fig.write_html('plot.html')
+    st.plotly_chart(fig, use_container_width=True)
+    
 "---"
 
+
+
+# c_out = c
+# c_out.insert(0, 't', c_out.index)
+# c_out.reset_index(drop=True, inplace=True)
+# engine = create_engine(url)
+# D.to_sql(name=cols.columns[0], con=engine, if_exists = 'append', index = False)
+# with engine.connect() as con:
+#     con.execute(text('alter table ' + db_path_updated + ' add primary key (t)'))
+    
 sys.exit()
 
 
