@@ -343,7 +343,7 @@ st.header('', divider='green')
 
 #_______________________
 st.subheader('5. Update clean_ table')
-st.markdown(''':red[Stop! Have you forgotten Hourly2?]''')
+st.markdown(':red[Stop! Have you forgotten Hourly2?]')
 st.write('If the logger generates more than one data table simultaneously, the clean_ table is to be updated only after when the raw_ table has been updated using all files from the data logger.')
 
 # if not 'mm' in locals():
@@ -371,64 +371,78 @@ elif clean_site == 'S6':
         cols = cols_S6
 
 if 'd_2' not in st.session_state:
+    st.session_state.d_0 = []
     st.session_state.d_2 = []
-r1, r2, r3 = st.columns(3)
+    st.session_state.D   = []
+r1, r2, r3 = st.columns([0.4, 0.3, 0.3])
 with r1:
-    gen_clean = st.button('Generate the clean_ table', key = 'p_gen_clean', help = "Using the updated raw_ table a table in clean_ format will be generated for the times covered by the AWS file and 15 days preceding that.")
+    b41 = st.button('Generate data in clean_ format', key = 'p_gen_clean', help = "Using data from the raw_ table and AWS file a table in clean_ format will be generated for the times covered by the AWS file and 15 days preceding that.")
 with r2:
-    b4  = st.button("Show the clean_ table")
+    b42  = st.button("Show the clean_ table")
 with r3:
-    cb4 = st.checkbox('First 10 and last 2 rows', value = True, help = "Uncheck the box to show the entire table.", key = 'cb4')
+    b43 = st.checkbox('First 10 and last 2 rows', value = True, help = 'Uncheck the box to show the entire table.', key = 'cb4')
 
-if gen_clean:
-    t_last = fl_d.index[0] - timedelta(days = 15)
-    d_0 = c[c.index > t_last].reset_index()
+if b41:
+    t_max_f = fl_d.index[0] - timedelta(days = 15)
+    d_0 = c[c.index > t_max_f].reset_index()
+    st.session_state.d_0 = d_0
     _, d_2 = raw_to_clean(cols, 4, d_0)
     m = d_2.index.month > 9   # Add water year column
     d_2.insert( 0, 'WatYr', d_2.index.year+1*m.astype(int) )
     st.session_state.d_2 = d_2
+    
+    engine = create_engine(url)
+    with engine.connect() as connection:
+        t_max_c = connection.execute(text(f"SELECT MAX(t) FROM {cols.columns[0]}"))
+    st.session_state.D = d_2[d_2.index>t_max_c.scalar()]
+    
+   
 
-
-if b4:
-    st.session_state.d_2
-    if st.session_state.d_2 == []:
+if b42:
+    if len( st.session_state.d_2 ) == 0:
         st.warning('To proceed generate clean_ table first!')
         st.stop()
     d_2 = st.session_state.d_2
-    if cb4:
+    if b43:
         st.dataframe(pd.concat([d_2.head(10), d_2.tail(2)], ignore_index=False) , hide_index = False)
     else:
         st.dataframe(d_2)
+st.title('')
+
+# plotting
+if 'С' not in st.session_state:
+    st.session_state.С = []
+r1, r2, r3 = st.columns([0.4, 0.3, 0.3])
+with r1:
+    b51 = st.button('Load UNupdated clean_ table', key = 'p_load_clean', help = 'Download the current clean_ table from the DataBase for plotting.')
+with r2:
+    b52 = st.selectbox( 'Choose variable to plot', cols.iloc[1:,0], index = None )
+    # b52 = "Air_Temp"
+with r3:
+    b53 = st.button('Plot', help = 'Plot data from raw and clean tables')
 
 
-load_clean = st.button('Load the current (not updated) clean_ table from DataBase', key = 'p_load_clean', help = "This will download the current clean_ table from the DataBase.")
-if load_clean:
-    # download existing clean_ table
+if b51:            # download existing clean_ table and update it using data from the raw_ table
     engine = create_engine(url)
     with engine.connect() as connection:
-        C = pd.read_sql(f"SELECT * FROM {cols.columns[0]}", connection)
-    C.set_index('t', inplace=True)
+        st.session_state.С = pd.read_sql(f"SELECT * FROM {cols.columns[0]}", connection)
+    st.session_state.С.set_index('t', inplace=True)
+    # st.session_state.D = st.session_state.C.copy()
+    # st.session_state.D.update(d_2)
+    # st.session_state.D = pd.concat([st.session_state.D, d_2.loc[~d_2.index.isin(st.session_state.D.index)]])
 
-
-
-D = C.copy()
-D.update(d_2)
-D = pd.concat([D, d_2.loc[~d_2.index.isin(D.index)]])
-    
-"---"
-# plotting
-v = st.selectbox( "Choose a variable to plot", cols.iloc[1:,0], index = None )
-# v = "Air_Temp"
-
-if st.button("Plot", help = "Plot data from raw and clean tables"):
-    if not v:
-      st.warning('To proceed choose the variable to plot first!')
+if b53:
+    if not b52 or len(st.session_state.С) == 0:
+      st.warning('To proceed load UNupdated clean_ table and choose the variable to plot!')
       st.stop()
       
-    fig = make_plot_clean(cols, v, C, [d_0])
-    s = go.Scattergl(x=D.index,
-                     y=D[v],
-                     name=cols.columns[0] + ' (updated): ' + v,
+    v = b52
+    d_0 = st.session_state.d_0
+    С = st.session_state.С
+    fig = make_plot_clean(cols, v, С, [d_0])
+    s = go.Scattergl(x=st.session_state.D.index,
+                     y=st.session_state.D[v],
+                     name=cols.columns[0] + ' (data for update): ' + v,
                      mode='markers')
     s.marker.color = 'rgb(214,39,40)'
     s.marker.size = 1
@@ -438,16 +452,30 @@ if st.button("Plot", help = "Plot data from raw and clean tables"):
     
     # fig.write_html('plot.html')
     st.plotly_chart(fig, use_container_width=True)
+
+
+
+b6 = st.button('Update clean_ table', key = 'p_upd_clean', help = "Append new data from raw_ table to the clean_ table.")
+st.session_state.D
+if b6:
+    engine = create_engine(url)
+    st.session_state.D.to_sql(name=cols.columns[0], con=engine, if_exists = 'append', index = False)
     
-"---"
+st.stop()
+
+    
+
+
+
+    
+
 
 
 
 # c_out = c
 # c_out.insert(0, 't', c_out.index)
 # c_out.reset_index(drop=True, inplace=True)
-# engine = create_engine(url)
-# D.to_sql(name=cols.columns[0], con=engine, if_exists = 'append', index = False)
+
 # with engine.connect() as con:
 #     con.execute(text('alter table ' + db_path_updated + ' add primary key (t)'))
     
