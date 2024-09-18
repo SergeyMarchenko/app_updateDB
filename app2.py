@@ -7,9 +7,9 @@ import streamlit         as st
 # os.chdir('Z:\FLNRO\Russell Creek\Data\DB\code_2_db\c02_app')
 import pandas as pd
 import numpy  as np
+from sqlalchemy             import create_engine, text, types
 from datetime               import datetime
 from f01_get_config         import get_config
-from f10_upload_db          import upload_db
 from f11_get_db_loop        import get_db_loop
 from f13_raw_to_clean_loop  import raw_to_clean_loop
 from f14_make_plot_clean    import make_plot_clean
@@ -128,12 +128,21 @@ if st.button("Plot", help = "Plot data from raw tables and clean table"):
     st.plotly_chart(fig, use_container_width=True)
     
 "---"
-    
 # Export table to database
 db_path_updated = st.text_input('Name for the clean DataBase table:', db_path_updated)
-# db_path_updated = cols.columns[0] + '_today'
+
 if st.button('Upload DataBase table', key = "p_upd"):
-    m = upload_db(c, url, db_path_updated)
+    c = c.reset_index()
+    dtypes = {col: types.Float for col in c.columns if col != 'DateTime' or col != 'WatYr'}
+    dtypes['DateTime'] = types.DateTime
+    dtypes['WatYr'   ] = types.INTEGER
+
+    engine = create_engine(url)
+    c.to_sql(name=db_path_updated, con=engine, if_exists = 'replace', index = False, dtype=dtypes)
+    with engine.connect() as con:
+        con.execute(text('alter table ' + db_path_updated + ' add primary key (DateTime)'))
+    m = 'The table: "' + db_path_updated + '"' + 'is uploaded to the DataBase.'
+        
     m1 = ''
     for tb in range(4,cols.shape[1]):
         m1 = m1 + cols.columns[tb] + ', '

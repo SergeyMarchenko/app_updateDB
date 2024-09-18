@@ -14,10 +14,10 @@ def get_db(url, db_path):
     # return db_d
     
     db_t = db_d.iloc[:, 0]
-    db_t.name = 't'
+    db_t.name = 'DateTime'
     db_d = db_d.iloc[:,1:]
     
-    db_d = pd.concat([db_t, db_d], axis=1).set_index('t').squeeze()
+    db_d = pd.concat([db_t, db_d], axis=1).set_index('DateTime').squeeze()
         
     
     # Replace "%" in column names with "percent"

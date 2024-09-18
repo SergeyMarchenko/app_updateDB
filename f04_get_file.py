@@ -63,14 +63,14 @@ def get_file_defined(fl_d0, tcol, dcol, hrow, urow, drow):
         fl_t = fl_t.astype(str)
         fl_t = fl_t.iloc[:,0] + '-' + fl_t.iloc[:,1] + '-' + fl_t.iloc[:,2] + ' ' + fl_t.iloc[:,3] + ':' + fl_t.iloc[:,4] + ':' + fl_t.iloc[:,5]
         fl_t = pd.to_datetime(fl_t)
-        fl_t = pd.DataFrame({ 't':fl_t})
+        fl_t = pd.DataFrame({ 'DateTime':fl_t})
     else:
-        fl_t.columns = ['t']
+        fl_t.columns = ['DateTime']
     
     
      
     fl_d = fl_d0.iloc[drow:,dcol]
-    fl_d = pd.concat([fl_t, fl_d], axis=1).set_index('t').squeeze()
+    fl_d = pd.concat([fl_t, fl_d], axis=1).set_index('DateTime').squeeze()
     fl_d.index = pd.to_datetime( fl_d.index )
 
 

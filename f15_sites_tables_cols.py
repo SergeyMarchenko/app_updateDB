@@ -6,7 +6,7 @@ def sites_tables_cols():
     
     tables_S1 = ['clean_Steph1'  ,'aggregation_method'  , 'min', 'max', 'raw_Steph1_CSci'  ,'raw_Steph1_hobo']
     cols_S1 = pd.DataFrame([
-    ['DateTime'         ,''           ,   0 ,   0         ,'t'                  ,'t'                      ],
+    ['DateTime'         ,''           ,   0 ,   0         ,'DateTime'            ,'DateTime'              ],
     ['Air_Temp'	    	,'mean'       , -40 ,  40         ,'AirTemp_Avg_Deg_C'   ,'Temp_degC'             ],
     ['RH'			    ,'mean'       ,   0 , 100         ,'RH_Avg_percent'		 ,'RH_percent'            ],
     ['BP'			    ,'mean'       , 500 ,1500         ,'AirPressur_Avg_hPa'  ,''                      ],
@@ -25,7 +25,7 @@ def sites_tables_cols():
     
     tables_S2 = ['clean_Steph2'  ,'aggregation_method'  , 'min', 'max', 'raw_Steph2_CSci']
     cols_S2 = pd.DataFrame([
-    ['DateTime'         ,''           ,   0 ,   0         ,'t'                  ],
+    ['DateTime'         ,''           ,   0 ,   0         ,'DateTime'           ],
     ['Air_Temp'	    	,'mean'       , -40 ,  40         ,'AirTemp_Avg_Deg_C'  ],
     ['RH'			    ,'mean'       ,   0 , 100         ,'RH_Avg_percent'		],
     ['BP'			    ,'mean'       , 500 ,1500         ,''                   ],
@@ -44,7 +44,7 @@ def sites_tables_cols():
     
     tables_S4 = ['clean_Steph4'  ,'aggregation_method'  , 'min', 'max', 'raw_Steph4_CSci', 	'raw_Steph4_hobo']
     cols_S4 = pd.DataFrame([
-    ['DateTime'         ,''           ,   0 ,   0         ,'t'                 ,'t'                       ],
+    ['DateTime'         ,''           ,   0 ,   0         ,'DateTime'          ,'DateTime'                ],
     ['Air_Temp'	    	,'mean'       , -40 ,  40         ,'AirTemp_Avg_Deg_C' ,'temp_degC'               ],
     ['RH'			    ,'mean'       ,   0 , 100         ,'RH_Avg_percent'	   ,'rh_percent'              ],
     ['BP'			    ,'mean'       , 500 ,1500         ,''                  ,''                        ],
@@ -63,7 +63,7 @@ def sites_tables_cols():
     
     tables_S6 = ['clean_Steph6'  ,'aggregation_method'  , 'min', 'max', 'raw_Steph6_CSci', 	'raw_Steph6_hobo']
     cols_S6 = pd.DataFrame([
-    ['DateTime'         ,''           ,   0 ,   0         ,'t'                 ,'t'                      ],
+    ['DateTime'         ,''           ,   0 ,   0         ,'DateTime'          ,'t'                      ],
     ['Air_Temp'	    	,'mean'       , -40 ,  40         ,'AirTemp_Avg_Deg_C' ,'temp_degC'              ],
     ['RH'			    ,'mean'       ,   0 , 100         ,'RH_Avg_percent'    ,'RH_percent'             ],
     ['BP'			    ,'mean'       , 500 ,1500         ,''                  ,''                       ],
