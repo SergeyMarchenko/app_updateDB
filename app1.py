@@ -16,7 +16,6 @@ from f06_col_routes         import col_routes
 from f07_merge_dbfl         import merge_dbfl
 from f08_make_plot_raw      import make_plot_raw
 from f09_col_stats          import col_stats
-from f10_upload_db          import upload_db
 from f12_raw_to_clean       import raw_to_clean
 from f15_sites_tables_cols  import sites_tables_cols
 from f17_make_plot_clean_upd    import make_plot_clean_upd
