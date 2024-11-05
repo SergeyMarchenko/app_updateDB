@@ -48,6 +48,6 @@ def merge_dbfl(db_d, fl_d, col_dict, ow_flag):
 
     ind = fl_d1.index.difference(db_d1.index)      # ind - indexes in the AWS file table that do not appear in the indexes of the database table
     db_d1 = pd.concat([db_d1, fl_d1.loc[ind,:]])   # for "ind" rows in database table write data from corresponding columns in the AWS file table
-    
+    db_d1 = db_d1.sort_index()
     
     return db_d1, col_dict_out

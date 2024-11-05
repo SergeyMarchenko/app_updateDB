@@ -35,7 +35,7 @@ def get_file_prelim(fl_path, delim, rskip):
 
 
 @st.cache_data(show_spinner="Fetching file...")
-def get_file_defined(fl_d0, tcol, dcol, hrow, urow, drow):
+def get_file_defined(fl_d0, tcol, toff, dcol, hrow, urow, drow):
                
     # Convert the string with numbers of column containing time stamp to a list of integers
     tcol = tcol.split(',')
@@ -113,6 +113,8 @@ def get_file_defined(fl_d0, tcol, dcol, hrow, urow, drow):
             fl_coltyp.append("float")
             
     fl_d = fl_d.astype("float")
+    
+    fl_d.index = fl_d.index + pd.DateOffset(hours=toff)
 
 
     return fl_d, fl_h, fl_coltyp

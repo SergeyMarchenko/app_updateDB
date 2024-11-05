@@ -63,7 +63,7 @@ if new_old == "Existing table":
     table_names = get_tables(url)
     db_path = st.selectbox( "2.2. Choose DataBase table to update (reload required if recently updated)", table_names, index = None )
     #
-    # db_path = 'raw_Steph1_CSci'
+    # db_path = 'raw_upperrussell'
     #
     if not db_path:
       st.warning('To proceed choose table to update first!')
@@ -99,10 +99,11 @@ st.header('', divider='green')
 
 st.subheader("3. Choose text file")
 
-# fl_path = 'Z:/FLNRO/Russell Creek/Data/1 Steph 1/2024/2024_04_18/Steph1_Hourly2_2023-11-30T09-52.dat'
+# fl_path = 'Z:/FLNRO/Russell Creek/Data/9 Upper Russell/2024/2024_10_22/25454_Hourly_2024-01-31T04-41.dat'
 # delim = ','
 # rskip = '1'
 # tcol  = '0'
+# toff  =  0
 # dcol  = '2'
 # hrow  = '0'
 # urow  = '1'
@@ -128,22 +129,22 @@ with st.expander("Show the preliminary read AWS file"):
 
 st.write("Settings for the text file reader, column and row numbers are given with reference to the preliminary read file:")
 
-r1, r2, r3, r4, r5 = st.columns(5)
+r1, r2, r3, r4, r5, r6 = st.columns(6)
 with r1:
     tcol  = st.text_input('Time col(s):'  , value = '0', key='fl_tcol' , help='Number of column(s) with time stamps. Multiple numbers are to be separated by ","')
 with r2:
-    dcol  = st.text_input('Data col(s):'  , value = '2', key='fl_dcol' , help='Number of first column with data, all columns to the right are read too. If multiple numbers separated by "," are given, only the specific columns are read.')
+    toff  = st.number_input('T offset', min_value=-24, max_value=24, value=0, step=1, key='fl_toff', help='Offset timestamps by a given number of hours to shift to a different time zone.')
 with r3:
-    hrow  = st.text_input('Header row:'   , value = '0', key='fl_hrow' , help='Number of the row with column headers.')
+    dcol  = st.text_input('Data col(s):'  , value = '2', key='fl_dcol' , help='Number of first column with data, all columns to the right are read too. If multiple numbers separated by "," are given, only the specific columns are read.')
 with r4:
-    urow  = st.text_input('Units row:'    , value = '1', key='fl_urow' , help='Number of the row with column units. Leave empty if now such row exists.')
+    hrow  = st.text_input('Header row:'   , value = '0', key='fl_hrow' , help='Number of the row with column headers.')
 with r5:
+    urow  = st.text_input('Units row:'    , value = '1', key='fl_urow' , help='Number of the row with column units. Leave empty if now such row exists.')
+with r6:
     drow  = st.text_input('Data row(s):'  , value = '3', key='fl_drow' , help='Number of first row with data, all rows below are read too.')
 
-
-
     
-fl_d, fl_h, fl_coltyp = get_file_defined(fl_d0, tcol, dcol, hrow, urow, drow)
+fl_d, fl_h, fl_coltyp = get_file_defined(fl_d0, tcol, toff, dcol, hrow, urow, drow)
 
 del fl_d0
 
@@ -185,7 +186,8 @@ _, col_dict = col_routes(db_d, fl_d, db_h, fl_h)    #for each column in the data
 
 col = [2.5, 3.5, 0.8, 0.8, 0.8, 0.8, 0.8, 1.2]
 
-r1, r2, r3  = st.columns([col[0], col[1], sum(col[2:])])
+
+r1, r2, r3, r4  = st.columns([col[0], col[1], sum(col[2:6]), sum(col[6:])])
 with r1:
    st.text("AWS file")
 
@@ -199,17 +201,28 @@ with r3:
         coefficient of correlation
         fraction of NAN values in DataBase, %
         fraction of NAN values in AWS file, %
-    Checkbox - click to overwrite non-NaN values in the DataBase
-    by values from for the overlapping time period
         """
-    st.text("Common time stats and control", help = h)
+    st.text("Common time stats", help = h)
+    
+with r4:
+    h = """
+    Click to overwrite non-NaN values in the DataBase
+    by values from the AWS file for the overlapping time period
+        """
+    st.text("Overwrite?", help = h)
+    
 
 if new_old == "Existing table":
     db_h_o = ['add NEW COLUMN to db', 'SKIP the column'] + db_h
 else:
     db_h_o = [                        'SKIP the column'] + db_h
 
-ow_flag = [False] * len(col_dict)
+r1, r2, r3, r4, r5, r6, r7, r8 = st.columns(col)
+with r7:
+    ow_all = st.checkbox(' ', False, key = 'ow_flag_all', label_visibility = 'collapsed')
+
+ow_flag = [ow_all] * len(col_dict)
+
 count = 0
 for key in col_dict:
     r1, r2, r3, r4, r5, r6, r7, r8 = st.columns(col)
@@ -236,7 +249,7 @@ for key in col_dict:
             st.text(nanb)
     
     with r7:
-        ow_flag[count] = st.checkbox(' ', False, key = "ow_flag_"+key, label_visibility = 'collapsed')
+        ow_flag[count] = st.checkbox(' ', ow_flag[count], key = "ow_flag_"+key, label_visibility = 'collapsed')
         
     with r8:
         p = st.button( 'plot', key = "p_"+key, disabled = col_dict[key] == None )
@@ -244,18 +257,36 @@ for key in col_dict:
     count = count + 1
 
 #_______________________
-# group col_dict keys with same values in rows of a list
+# list columns in the DB table that are not updated
+unused = [item for item in db_h if item not in list( col_dict.values() )]
+if len(unused)==0:
+    st.write('All columns in the DataBase table will be updated.')
+else:
+    with st.expander("Columns in the DataBase table that will NOT be updated, new rows will have NaN values (click to expand):"):
+        for i in unused:
+            r1, r2, r3, r4, r5, r6, r7, r8 = st.columns(col)
+            with r2:
+                st.write(i)
+del unused, i
+
+# group col_dict keys with same values in rows of a list and
+# display a warning message in case two columns from file are routed to the same column in database
 repcol = defaultdict(list)
 for key, value in col_dict.items():
     if value != 'add NEW COLUMN to db' and value != 'SKIP the column':
         repcol[value].append(key)
 repcol = [keys for keys in repcol.values() if len(keys) > 1]
 
-# warning message in case two columns from file are routed to the same column in database
 if len(repcol)>0:
     st.warning('Following columns in the AWS file have the same destination:')
     for row in repcol:
-        st.write(row)
+        r1, r2, r3, r4 = st.columns([1.5, 0.5, 1.5, 5])
+        with r1:
+            st.write(row[0])
+        with r2:
+            st.write('and')
+        with r3:
+            st.write(row[1])
     st.warning('choose a different destination for one of the columns above to continue!')
     st.stop()
 
@@ -266,6 +297,7 @@ c, col_dict_out = merge_dbfl(db_d, fl_d, col_dict, ow_flag)
 for key in col_dict.keys():
     if st.session_state["p_" + key]:
         fig = make_plot_raw(db_d, fl_d, c, col_dict, col_dict_out, key)
+        # fig.write_html('plot.html')
         st.plotly_chart(fig, use_container_width=True)
         
 # modal = Modal(
@@ -328,7 +360,8 @@ if upload:
     c_out = c_out.reset_index()
     dtypes = {col: types.Float for col in c.columns if col != 'DateTime'}
     dtypes['DateTime'] = types.DateTime
-    dtypes[c_out.columns[ db_coltyp.index('datetime64[ns]')+1 ]] = types.DateTime
+    if 'datetime64[ns]' in db_coltyp:
+        dtypes[c_out.columns[ db_coltyp.index('datetime64[ns]')+1 ]] = types.DateTime
     
     
     engine = create_engine(url)
@@ -361,13 +394,13 @@ st.write('If the logger generates more than one data table simultaneously, the c
     
 sites, cols_S1, cols_S2, cols_S4, cols_S6 = sites_tables_cols()
 
-if   '1' in db_path:
+if   'raw_Steph1' in db_path:
     ind = 0
-elif '2' in db_path:
+elif 'raw_Steph2' in db_path:
     ind = 1
-elif '4' in db_path:
+elif 'raw_Steph4' in db_path:
     ind = 2
-elif '6' in db_path:
+elif 'raw_Steph6' in db_path:
     ind = 3
 clean_site = st.selectbox( "Choose site profile for generating the clean_ table ", sites, index = ind )
 if   clean_site == 'S1':
