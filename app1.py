@@ -99,15 +99,15 @@ st.header('', divider='green')
 
 st.subheader("3. Choose text file")
 
-# fl_path = 'Z:/FLNRO/Russell Creek/Data/9 Upper Russell/2024/2024_10_22/25454_Hourly_2024-01-31T04-41.dat'
+# fl_path = 'Z:/Weather Stations/GOES Stations/Tetrahedron/Data/S-test/tetr_PST.txt'
 # delim = ','
-# rskip = '1'
-# tcol  = '0'
-# toff  =  0
-# dcol  = '2'
+# rskip = '0'
+# tcol  = '0,1,2,3,4,5'
+# toff  =  -8
+# dcol  = '6'
 # hrow  = '0'
-# urow  = '1'
-# drow  = '3'
+# urow  = ''
+# drow  = '1'
     
 r1, r2 = st.columns([0.8, 0.2])
 with r1:

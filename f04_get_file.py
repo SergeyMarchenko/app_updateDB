@@ -87,6 +87,7 @@ def get_file_defined(fl_d0, tcol, toff, dcol, hrow, urow, drow):
         if not pd.isna(fl_u[i]):
             fl_u[i] = fl_u[i].strip()
             fl_u[i] = fl_u[i].replace(" ", "_")
+        if fl_u[i] != '':
             fl_h[i] = fl_h[i] + '_' + fl_u[i]
     del i, fl_u
     fl_d = fl_d.rename(columns=dict(zip(fl_d.columns, fl_h)))
