@@ -267,7 +267,7 @@ else:
             r1, r2, r3, r4, r5, r6, r7, r8 = st.columns(col)
             with r2:
                 st.write(i)
-del unused, i
+del unused
 
 # group col_dict keys with same values in rows of a list and
 # display a warning message in case two columns from file are routed to the same column in database
