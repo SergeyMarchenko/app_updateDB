@@ -10,11 +10,11 @@ from   sqlalchemy import create_engine, inspect
 
 # table_names = get_tables(url)
 @st.cache_data(show_spinner="browsing available tables...")
-def get_tables(url):
+def get_tables(url, prefix):
     
     engine = create_engine(url)
     inspection   = inspect(engine)
     table_names  = inspection.get_table_names("viuhydro_wx_data_v2")
-    table_names = [x for x in table_names if x.startswith("raw")]
+    table_names = [x for x in table_names if prefix in x]
 
     return table_names

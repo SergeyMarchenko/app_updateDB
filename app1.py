@@ -22,7 +22,6 @@ from f17_make_plot_clean_upd    import make_plot_clean_upd
 # from streamlit_modal     import Modal
 from collections            import defaultdict
 from datetime               import datetime, timedelta
-#cououcou
 
 # z:
 # cd Z:\FLNRO\Russell Creek\Data\DB\code_2_db\c02_app
@@ -53,15 +52,30 @@ st.header('', divider='green')
 #__________________________________________
 #____Load data from the online database____
 #__________________________________________
-st.subheader('2. Choose DataBase table to update')
-new_old = st.radio(
-    '2.1. New or existing table:',
-    ['Existing table', 'New table'], help = 'Choose whether data in the text file is used to update an existing table in the DataBase or start a new one.',
-    captions = ['',''])
+st.subheader('2. Choose DataBase table to update/initiate')
+st.markdown('2.1. New or existing table:')
 
+new_old = st.radio('', ['Existing table with title containing:', 'New table with title:'], label_visibility = 'collapsed', horizontal = 1 )
+
+r1, r2 = st.columns([0.37, 0.6])
+with r1:
+    prefix = st.text_input('', value = 'raw_', max_chars=50, key='db_prefix', label_visibility = 'collapsed')
+with r2:
+    db_path  = st.text_input('', value = 'raw_', max_chars=50, key='db_path', label_visibility = 'collapsed')
+
+
+if new_old == 'Existing table with title containing:':
+   new_old = 'Existing table'
+else:
+    new_old = 'New table'
+    
 if new_old == "Existing table":
-    table_names = get_tables(url)
-    db_path = st.selectbox( "2.2. Choose DataBase table to update (reload required if recently updated)", table_names, index = None )
+    table_names = get_tables(url, prefix)
+    st.markdown('''2.2. Choose DataBase table to update  
+                (reload required if recently updated)''')
+    r1, r2 = st.columns([0.37, 0.6])
+    with r1:
+        db_path = st.selectbox( '', table_names, index = None, label_visibility = 'collapsed' )
     #
     # db_path = 'raw_upperrussell'
     #
@@ -85,8 +99,8 @@ if new_old == "Existing table":
         del tmp
     elif b1:
         st.dataframe(db_d)
-else:
-    db_path = "raw"
+# else:
+    # db_path = "raw"
     # st.text_input('Name for the new database table:', "raw_")
     
 
@@ -99,15 +113,15 @@ st.header('', divider='green')
 
 st.subheader("3. Choose text file")
 
-# fl_path = 'Z:/Weather Stations/GOES Stations/Tetrahedron/Data/S-test/tetr_PST.txt'
+# fl_path = 'Z:/FLNRO/Russell Creek/Data/9 Upper Russell/2023/2023-10-23/UpperRussell_10_direct_Hourly_2023_10_24_09_19_36.dat'
 # delim = ','
-# rskip = '0'
-# tcol  = '0,1,2,3,4,5'
-# toff  =  -8
-# dcol  = '6'
+# rskip = '1'
+# tcol  = '0'
+# toff  =  0
+# dcol  = '2'
 # hrow  = '0'
-# urow  = ''
-# drow  = '1'
+# urow  = '1'
+# drow  = '3'
     
 r1, r2 = st.columns([0.8, 0.2])
 with r1:
@@ -183,9 +197,33 @@ if st.button("Show time lines for existing DataBase table and AWS file"):
 col_dict = {key: '' for key in fl_h}
 _, col_dict = col_routes(db_d, fl_d, db_h, fl_h)    #for each column in the data file find the best matching column in the database
 
+ow_flag = {key: False for key in fl_h}
 
+# block below along with some lines lower down was intended to have a selectbox on top of the checkboxes for overwriting non-NaN values in the DataBase by the data in File
+# the selectbox would have controlled the values of all theckboxes and be used to set all to True or False in one click
+# could not get the link between values in ckeckboxes and in the selectbox to work smoothly
+
+# if 'ow'     not in st.session_state:
+#     st.session_state.ow = {key: False for key in fl_h}
+
+# if 'ow_all' not in st.session_state:
+#     st.session_state.ow_all = 'some'
+
+# def update_ow():
+#     if   st.session_state.ow_all == 'all':
+#                                     st.session_state.ow = {key: True  for key in st.session_state.ow}
+#     elif st.session_state.ow_all == 'none':
+#                                     st.session_state.ow = {key: False for key in st.session_state.ow}
+                                                    
+# def update_ow_all():
+#     if       all( st.session_state.ow.values() ):
+#         st.session_state.ow_all = 'all'
+#     elif not(any( st.session_state.ow.values() )):
+#         st.session_state.ow_all = 'none'
+#     else:
+#         st.session_state.ow_all = 'some'
+    
 col = [2.5, 3.5, 0.8, 0.8, 0.8, 0.8, 0.8, 1.2]
-
 
 r1, r2, r3, r4  = st.columns([col[0], col[1], sum(col[2:6]), sum(col[6:])])
 with r1:
@@ -206,11 +244,15 @@ with r3:
     
 with r4:
     h = """
-    Click to overwrite non-NaN values in the DataBase
-    by values from the AWS file for the overlapping time period
+    Control overwriting of non-NaN values in the DataBase
+    by values from the AWS file for the overlapping time period.
+    Some: any (including none and all) columns may be overwritten;
+    None: 0 columns are overwritten;
+    All: all columns are overwritten;
         """
     st.text("Overwrite?", help = h)
     
+    # st.session_state.ow_all = st.selectbox(' ', ['some', 'none', 'all'], index=0, on_change=update_ow, key='ow_flag_all', label_visibility='collapsed')
 
 if new_old == "Existing table":
     db_h_o = ['add NEW COLUMN to db', 'SKIP the column'] + db_h
@@ -218,27 +260,22 @@ else:
     db_h_o = [                        'SKIP the column'] + db_h
 
 r1, r2, r3, r4, r5, r6, r7, r8 = st.columns(col)
-with r7:
-    ow_all = st.checkbox(' ', False, key = 'ow_flag_all', label_visibility = 'collapsed')
 
-ow_flag = [ow_all] * len(col_dict)
-
-count = 0
-for key in col_dict:
+for k in col_dict:
     r1, r2, r3, r4, r5, r6, r7, r8 = st.columns(col)
     with r1:
-        st.write(key)
+        st.write(k)
 
     with r2:
-        if col_dict[key] == '':
+        if col_dict[k] == '':
             ind = None
         else:
-            ind = db_h_o.index(col_dict[key])
-        col_dict[key] = st.selectbox(" "   , db_h_o, key = "o_"+key, index = ind, label_visibility="collapsed" )
+            ind = db_h_o.index(col_dict[k])
+        col_dict[k] = st.selectbox(" "   , db_h_o, key = "o_"+k, index = ind, label_visibility="collapsed" )
         del ind
         
-    if col_dict[key] != 'add NEW COLUMN to db' and col_dict[key] != 'SKIP the column' and any(fl_d.index.isin(db_d.index)):
-        _, Ne, cc_d, cc_h, nana, nanb = col_stats(db_d, fl_d, col_dict, key)
+    if col_dict[k] != 'add NEW COLUMN to db' and col_dict[k] != 'SKIP the column' and any(fl_d.index.isin(db_d.index)):
+        _, Ne, cc_d, cc_h, nana, nanb = col_stats(db_d, fl_d, col_dict, k)
         with r3:
             st.text(Ne)
         with r4:
@@ -249,12 +286,11 @@ for key in col_dict:
             st.text(nanb)
     
     with r7:
-        ow_flag[count] = st.checkbox(' ', ow_flag[count], key = "ow_flag_"+key, label_visibility = 'collapsed')
-        
+        # st.session_state.ow[k] = st.checkbox(' ', st.session_state.ow[k], key = "ow_flag_"+k, label_visibility = 'collapsed', on_change=update_ow_all)
+        ow_flag[k]             = st.checkbox(' ', ow_flag[k], key = "ow_flag_"+k, label_visibility = 'collapsed')
     with r8:
-        p = st.button( 'plot', key = "p_"+key, disabled = col_dict[key] == None )
-        
-    count = count + 1
+        p = st.button( 'plot', key = "p_"+k, disabled = col_dict[k] == None )
+
 
 #_______________________
 # list columns in the DB table that are not updated
@@ -290,8 +326,10 @@ if len(repcol)>0:
     st.warning('choose a different destination for one of the columns above to continue!')
     st.stop()
 
-# merge the existing DataBase table and data in the text file    
+# merge the existing DataBase table and data in the text file
+# ow_flag = st.session_state.ow
 c, col_dict_out = merge_dbfl(db_d, fl_d, col_dict, ow_flag)
+
 
 # plot to visualize data in the: existing DataBase table, text file, merged dataframe
 for key in col_dict.keys():
@@ -379,6 +417,8 @@ if upload:
     else:
         st.snow()
     st.cache_data.clear()
+    
+    del ow_flag
     
 st.header('', divider='green')
 

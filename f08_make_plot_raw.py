@@ -14,6 +14,10 @@ import streamlit            as st
 def make_plot_raw(db_d, fl_d, c, col_dict, col_dict_out, key):
     # key = "AirTemp_Avg_Deg_C"
     b = fl_d[             key ].squeeze() # AWS data file
+
+    def is_surrounded(i, iA):
+        return any( iA<=i ) and any( i<=iA )
+
     if  col_dict[key] == "SKIP the column":
             
         s2 = go.Scattergl(x=b.index, y=b, name='AWS file'         , mode='markers')
@@ -42,8 +46,8 @@ def make_plot_raw(db_d, fl_d, c, col_dict, col_dict_out, key):
         
         if a.size == 0:
             t = "Note: data from the AWS file shown below will be added to a new DataBase table."
-
-        elif any(a.index.isin( b.index)):                       # DataBase table overlaps in time with AWS file
+        
+        elif any([is_surrounded(i, a.index) for i in b.index]):                       # DataBase table overlaps in time with AWS file
             a = a[a.index >= b.index.min() - pd.DateOffset(days=10)]
             a = a[a.index <= b.index.max() + pd.DateOffset(days=10)]
             m = m[m.index >= b.index.min() - pd.DateOffset(days=10)]
