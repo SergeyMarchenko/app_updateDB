@@ -72,7 +72,8 @@ def get_file_defined(fl_d0, tcol, toff, dcol, hrow, urow, drow):
     fl_d = fl_d0.iloc[drow:,dcol]
     fl_d = pd.concat([fl_t, fl_d], axis=1).set_index('DateTime').squeeze()
     fl_d.index = pd.to_datetime( fl_d.index )
-
+    if isinstance(fl_d, pd.Series):
+        fl_d = pd.DataFrame(fl_d)
 
 
     fl_h = fl_d0.iloc[hrow,dcol].tolist()       # extract the rows with headers and units and merge them in one variable

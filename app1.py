@@ -113,15 +113,15 @@ st.header('', divider='green')
 
 st.subheader("3. Choose text file")
 
-# fl_path = 'Z:/FLNRO/Russell Creek/Data/9 Upper Russell/2023/2023-10-23/UpperRussell_10_direct_Hourly_2023_10_24_09_19_36.dat'
+# fl_path = 'Z:/FLNRO/Russell Creek/Data/9 Upper Russell/2022/2022-09-12/S9_precip_mH2O.csv'
 # delim = ','
-# rskip = '1'
-# tcol  = '0'
+# rskip = '0'
+# tcol  = '0,1,2,3,4,5'
 # toff  =  0
-# dcol  = '2'
+# dcol  = '6'
 # hrow  = '0'
-# urow  = '1'
-# drow  = '3'
+# urow  = ''
+# drow  = '1'
     
 r1, r2 = st.columns([0.8, 0.2])
 with r1:
