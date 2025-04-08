@@ -157,8 +157,12 @@ with r5:
 with r6:
     drow  = st.text_input('Data row(s):'  , value = '3', key='fl_drow' , help='Number of first row with data, all rows below are read too.')
 
+cb_HH00 = st.checkbox('Delete rows with times other than full hour', value = True, help = 'Uncheck the box to also read in values reported between full hours, e.g. 14:10, 14:30, 14:55.', key = 'cb_HH00')
     
 fl_d, fl_h, fl_coltyp = get_file_defined(fl_d0, tcol, toff, dcol, hrow, urow, drow)
+
+if cb_HH00:
+    fl_d = fl_d[(fl_d.index.minute == 0) & (fl_d.index.second == 0)]
 
 del fl_d0
 
