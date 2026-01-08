@@ -1,10 +1,11 @@
-import sys
+# import sys
 # import os
 # import mpld3
 # import re
 # os.chdir('Z:\FLNRO\Russell Creek\Data\DB\code_2_db\c02_app')
 import pandas               as pd
 import numpy                as np
+from datetime               import datetime
 from sqlalchemy             import create_engine, text, types
 import streamlit            as st
 from f01_get_config         import get_config
@@ -16,18 +17,14 @@ from f06_col_routes         import col_routes
 from f07_merge_dbfl         import merge_dbfl
 from f08_make_plot_raw      import make_plot_raw
 from f09_col_stats          import col_stats
-from f12_raw_to_clean       import raw_to_clean
-from f15_sites_tables_cols  import sites_tables_cols
-from f17_make_plot_clean_upd    import make_plot_clean_upd
 # from streamlit_modal     import Modal
 from collections            import defaultdict
-from datetime               import datetime, timedelta
 
 # z:
 # cd Z:\FLNRO\Russell Creek\Data\DB\code_2_db\c02_app
 # streamlit run app1.py
 
-    
+
 st.header('Update or initiate an online DataBase table')
 st.header('using data from an AWS file', divider='green')
 
@@ -38,9 +35,7 @@ st.header('using data from an AWS file', divider='green')
 
 st.subheader('1. DataBase access')
 path_config = st.file_uploader('Path to config.csv file with credentials to access the DataBase:')
-#
-# path_config = 'Z:/FLNRO/Russell Creek/Data/DB/code_2_db/config.csv'
-#
+# path_config = 'Z:/FLNRO/Russell Creek/Data/DB/code_2_db/config1.csv'
 if not path_config:
   st.warning('To proceed upload the file "config.csv" first!')
   st.stop()
@@ -55,29 +50,29 @@ st.header('', divider='green')
 st.subheader('2. Choose DataBase table to update/initiate')
 st.markdown('2.1. New or existing table:')
 
-new_old = st.radio('', ['Existing table with title containing:', 'New table with title:'], label_visibility = 'collapsed', horizontal = 1 )
+new_old = st.radio('', ['Existing table with title containing:', 'New table with title:'], label_visibility = 'collapsed', horizontal = 1, key = 'app1_radio_new_old' )
 
 r1, r2 = st.columns([0.37, 0.6])
 with r1:
-    prefix = st.text_input('', value = 'raw_', max_chars=50, key='db_prefix', label_visibility = 'collapsed')
+    prefix   = st.text_input('', value = 'raw_', max_chars=50, key='app1_textinp_db_prefix', label_visibility = 'collapsed')
 with r2:
-    db_path  = st.text_input('', value = 'raw_', max_chars=50, key='db_path', label_visibility = 'collapsed')
+    db_path  = st.text_input('', value = 'raw_', max_chars=50, key='app1_textinp_db_path'  , label_visibility = 'collapsed')
 
 
 if new_old == 'Existing table with title containing:':
-   new_old = 'Existing table'
+    new_old = 'Existing table'
 else:
     new_old = 'New table'
     
-if new_old == "Existing table":
+if new_old == 'Existing table':
     table_names = get_tables(url, prefix)
     st.markdown('''2.2. Choose DataBase table to update  
                 (reload required if recently updated)''')
     r1, r2 = st.columns([0.37, 0.6])
     with r1:
-        db_path = st.selectbox( '', table_names, index = None, label_visibility = 'collapsed' )
+        db_path = st.selectbox( '', table_names, index = None, label_visibility = 'collapsed', key = 'app1_selbox_rawtables' )
     #
-    # db_path = 'raw_upperrussell'
+    # db_path = 'raw_Steph6_CSci'
     #
     if not db_path:
       st.warning('To proceed choose table to update first!')
@@ -88,20 +83,20 @@ if new_old == "Existing table":
     
     r1, r2 = st.columns(2)
     with r1:
-        b1 = st.button("Show the current DataBase table")
+        b1 = st.button('Show the current DataBase table', key = 'app1_button_show_existing_raw_')
     with r2:
-        cb1 = st.checkbox('First 10 and last 2 rows', value = True, help = "Uncheck the box to show the entire table.", key = 'cb1')
-    # with st.expander("Show the top and bottom of the current DataBase table"):        
+        cb1 = st.checkbox('First 10 and last 2 rows', value = True, help = 'Uncheck the box to show the entire table.', key = 'app1_chb1_10firstlast')
+    # with st.expander('Show the top and bottom of the current DataBase table'):
 
     if b1 and cb1:
         tmp = pd.concat([db_d.head(10), pd.DataFrame(np.nan, index=[0], columns=db_d.columns), db_d.tail(2)], ignore_index=False)
-        st.dataframe(tmp, hide_index = False)
+        st.dataframe(tmp, hide_index = False, key = 'app1_datFr_existing_raw_10firstlast')
         del tmp
     elif b1:
-        st.dataframe(db_d)
+        st.dataframe(db_d, key = 'app1_datFr_existing_raw_all')
 # else:
-    # db_path = "raw"
-    # st.text_input('Name for the new database table:', "raw_")
+    # db_path = 'raw'
+    # st.text_input('Name for the new database table:', 'raw_')
     
 
 st.header('', divider='green')
@@ -111,24 +106,24 @@ st.header('', divider='green')
 #____load data from the text file downloaded from the logger____
 #__________________________________________
 
-st.subheader("3. Choose text file")
+st.subheader('3. Choose text file')
 
-# fl_path = 'Z:/FLNRO/Russell Creek/Data/9 Upper Russell/2022/2022-09-12/S9_precip_mH2O.csv'
+# fl_path = 'Z:/FLNRO/Russell Creek/Data/6 Steph 6/2025/2025_10_20/1_Hourly_2025-10-20T10-50.dat'
 # delim = ','
-# rskip = '0'
-# tcol  = '0,1,2,3,4,5'
+# rskip = '1'
+# tcol  = '0'
 # toff  =  0
-# dcol  = '6'
+# dcol  = '2'
 # hrow  = '0'
-# urow  = ''
-# drow  = '1'
+# urow  = '1'
+# drow  = '3'
     
 r1, r2 = st.columns([0.8, 0.2])
 with r1:
-    fl_path = st.file_uploader("Path to the file to be used for updating/initiating a DataBase table (from e.g. AWS data logger):")
+    fl_path = st.file_uploader('Path to the file to be used for updating/initiating a DataBase table (from e.g. AWS data logger):', key = 'app1_fileUpl_textfile')
 with r2:
-    delim   = st.text_input('Column delimiter:' , value = ',', max_chars=1, key='fl_delim', help='Symbol separating columns')
-    rskip   = st.text_input('N of rows to skip:', value = '1', key='fl_rskip' , help='Number of rows to skip. Number of columns should should be the same as in all rows')
+    delim   = st.text_input('Column delimiter:' , value = ',', max_chars=1, key = 'app1_textInp_colDelim', help='Symbol separating columns')
+    rskip   = st.text_input('N of rows to skip:', value = '1', key='app1_textInp_rowSkip' , help='Number of rows to skip. Number of columns should should be the same as in all rows')
 
 if not fl_path:
   st.warning('To proceed choose text file!')
@@ -136,28 +131,28 @@ if not fl_path:
 
 fl_d0 = get_file_prelim(fl_path, delim, rskip)
 
-with st.expander("Show the preliminary read AWS file"):
-# if st.button("Show the preliminary read AWS file"):
-    st.dataframe(fl_d0.head(10), hide_index = False)
+with st.expander('Show the preliminary read AWS file'):
+# if st.button('Show the preliminary read AWS file'):
+    st.dataframe(fl_d0.head(10), hide_index = False, key = 'app1_datFr_filePrelim')
 
 
-st.write("Settings for the text file reader, column and row numbers are given with reference to the preliminary read file:")
+st.write('Settings for the text file reader, column and row numbers are given with reference to the preliminary read file:')
 
 r1, r2, r3, r4, r5, r6 = st.columns(6)
 with r1:
-    tcol  = st.text_input('Time col(s):'  , value = '0', key='fl_tcol' , help='Number of column(s) with time stamps. Multiple numbers are to be separated by ","')
+    tcol  = st.text_input('Time col(s):'  , value = '0', key='app1_textInp_tcol' , help='Number of column(s) with time stamps. Multiple numbers are to be separated by ","')
 with r2:
-    toff  = st.number_input('T offset', min_value=-24, max_value=24, value=0, step=1, key='fl_toff', help='Offset timestamps by a given number of hours to shift to a different time zone.')
+    toff  = st.number_input('T offset', min_value=-24, max_value=24, value=0, step=1, key='app1_unmInp_toff', help='Offset timestamps by a given number of hours to shift to a different time zone.')
 with r3:
-    dcol  = st.text_input('Data col(s):'  , value = '2', key='fl_dcol' , help='Number of first column with data, all columns to the right are read too. If multiple numbers separated by "," are given, only the specific columns are read.')
+    dcol  = st.text_input('Data col(s):'  , value = '2', key='app1_textInp_dcol' , help='Number of first column with data, all columns to the right are read too. If multiple numbers separated by "," are given, only the specific columns are read.')
 with r4:
-    hrow  = st.text_input('Header row:'   , value = '0', key='fl_hrow' , help='Number of the row with column headers.')
+    hrow  = st.text_input('Header row:'   , value = '0', key='app1_textInp__hrow' , help='Number of the row with column headers.')
 with r5:
-    urow  = st.text_input('Units row:'    , value = '1', key='fl_urow' , help='Number of the row with column units. Leave empty if now such row exists.')
+    urow  = st.text_input('Units row:'    , value = '1', key='app1_textInp_urow' , help='Number of the row with column units. Leave empty if now such row exists.')
 with r6:
-    drow  = st.text_input('Data row(s):'  , value = '3', key='fl_drow' , help='Number of first row with data, all rows below are read too.')
+    drow  = st.text_input('Data row(s):'  , value = '3', key='app1_textInp_drow' , help='Number of first row with data, all rows below are read too.')
 
-cb_HH00 = st.checkbox('Delete rows with times other than full hour', value = True, help = 'Uncheck the box to also read in values reported between full hours, e.g. 14:10, 14:30, 14:55.', key = 'cb_HH00')
+cb_HH00 = st.checkbox('Delete rows with times other than full hour', value = True, key = 'app1_chBox_HH00', help = 'Uncheck the box to also read in values reported between full hours, e.g. 14:10, 14:30, 14:55.')
     
 fl_d, fl_h, fl_coltyp = get_file_defined(fl_d0, tcol, toff, dcol, hrow, urow, drow)
 
@@ -169,20 +164,20 @@ del fl_d0
 
 r1, r2 = st.columns(2)
 with r1:
-    b2 = st.button("Show the AWS file")
+    b2 = st.button('Show the AWS file')
 with r2:
-    cb2 = st.checkbox('First 10 and last 2 rows', value = True, help = "Uncheck the box to show the entire file.", key = 'cb2')
+    cb2 = st.checkbox('First 10 and last 2 rows', value = True, help = 'Uncheck the box to show the entire file.', key = 'app1_chBox_firstLast10')
 
 if b2 and cb2:
     tmp = pd.concat([fl_d.head(10), fl_d.tail(2)], ignore_index=False)
-    st.dataframe(tmp , hide_index = False)
+    st.dataframe(tmp , hide_index = False, key = 'app1_datFr_file_firstLast10')
     del tmp
 elif b2:
-    st.dataframe(fl_d, hide_index = False)
+    st.dataframe(fl_d, hide_index = False, key = 'app1_datFr_file_all')
     
     
 
-if new_old == "New table":
+if new_old == 'New table':
     db_h      = fl_h
     db_coltyp = fl_coltyp
     db_d      = fl_d.head(0)
@@ -192,11 +187,11 @@ st.header('', divider='green')
 #____table to map columns in file to columns in database
 #__________________________________________
 
-st.subheader("3. Route AWS file columns to DataBase table columns")
+st.subheader('3. Route AWS file columns to DataBase table columns')
 
-if st.button("Show time lines for existing DataBase table and AWS file"):
+if st.button('Show time lines for existing DataBase table and AWS file'):
     fig_t = make_plot_t(db_d.index.tolist(), fl_d.index.tolist())
-    st.plotly_chart(fig_t, use_container_width=True)
+    st.plotly_chart(fig_t, use_container_width=True, key = 'app1_fig_raw_DateTimes')
 
 col_dict = {key: '' for key in fl_h}
 _, col_dict = col_routes(db_d, fl_d, db_h, fl_h)    #for each column in the data file find the best matching column in the database
@@ -231,10 +226,10 @@ col = [2.5, 3.5, 0.8, 0.8, 0.8, 0.8, 0.8, 1.2]
 
 r1, r2, r3, r4  = st.columns([col[0], col[1], sum(col[2:6]), sum(col[6:])])
 with r1:
-   st.text("AWS file")
+    st.text('AWS file')
 
 with r2:
-   st.text("Database")
+    st.text('Database')
    
 with r3:
     h = """
@@ -244,21 +239,19 @@ with r3:
         fraction of NAN values in DataBase, %
         fraction of NAN values in AWS file, %
         """
-    st.text("Common time stats", help = h)
+    st.text('Common time stats', help = h)
     
 with r4:
     h = """
-    Control overwriting of non-NaN values in the DataBase
+    If checked then non-NaN values in the DataBase are overwritten
     by values from the AWS file for the overlapping time period.
-    Some: any (including none and all) columns may be overwritten;
-    None: 0 columns are overwritten;
-    All: all columns are overwritten;
+    If UNchecked this applies only for the NAN values.
         """
-    st.text("Overwrite?", help = h)
+    st.text('Overwrite?', help = h)
     
     # st.session_state.ow_all = st.selectbox(' ', ['some', 'none', 'all'], index=0, on_change=update_ow, key='ow_flag_all', label_visibility='collapsed')
 
-if new_old == "Existing table":
+if new_old == 'Existing table':
     db_h_o = ['add NEW COLUMN to db', 'SKIP the column'] + db_h
 else:
     db_h_o = [                        'SKIP the column'] + db_h
@@ -275,7 +268,7 @@ for k in col_dict:
             ind = None
         else:
             ind = db_h_o.index(col_dict[k])
-        col_dict[k] = st.selectbox(" "   , db_h_o, key = "o_"+k, index = ind, label_visibility="collapsed" )
+        col_dict[k] = st.selectbox(' '   , db_h_o, key = 'app1_selbox_o_'+k, index = ind, label_visibility='collapsed' )
         del ind
         
     if col_dict[k] != 'add NEW COLUMN to db' and col_dict[k] != 'SKIP the column' and any(fl_d.index.isin(db_d.index)):
@@ -290,10 +283,10 @@ for k in col_dict:
             st.text(nanb)
     
     with r7:
-        # st.session_state.ow[k] = st.checkbox(' ', st.session_state.ow[k], key = "ow_flag_"+k, label_visibility = 'collapsed', on_change=update_ow_all)
-        ow_flag[k]             = st.checkbox(' ', ow_flag[k], key = "ow_flag_"+k, label_visibility = 'collapsed')
+        # st.session_state.ow[k] = st.checkbox(' ', st.session_state.ow[k], key = 'app1_chBox_ow_flag_'+k, label_visibility = 'collapsed', on_change=update_ow_all)
+        ow_flag[k]             = st.checkbox(' ', ow_flag[k], key = 'app1_chBox_ow_flag_'+k, label_visibility = 'collapsed')
     with r8:
-        p = st.button( 'plot', key = "p_"+k, disabled = col_dict[k] == None )
+        p = st.button( 'plot', key = 'app1_butt_plot_'+k, disabled = col_dict[k] == None )
 
 
 #_______________________
@@ -302,7 +295,7 @@ unused = [item for item in db_h if item not in list( col_dict.values() )]
 if len(unused)==0:
     st.write('All columns in the DataBase table will be updated.')
 else:
-    with st.expander("Columns in the DataBase table that will NOT be updated, new rows will have NaN values (click to expand):"):
+    with st.expander('Columns in the DataBase table that will NOT be updated, new rows will have NaN values (click to expand):'):
         for i in unused:
             r1, r2, r3, r4, r5, r6, r7, r8 = st.columns(col)
             with r2:
@@ -337,26 +330,26 @@ c, col_dict_out = merge_dbfl(db_d, fl_d, col_dict, ow_flag)
 
 # plot to visualize data in the: existing DataBase table, text file, merged dataframe
 for key in col_dict.keys():
-    if st.session_state["p_" + key]:
+    if st.session_state['app1_butt_plot_' + key]:
         fig = make_plot_raw(db_d, fl_d, c, col_dict, col_dict_out, key)
         # fig.write_html('plot.html')
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, use_container_width=True, key = 'app1_fig_raw_data')
         
 # modal = Modal(
-#     "Plot",
-#     key="figure_window",
+#     'Plot',
+#     key='figure_window',
 #     padding   =    2,    # Optional, default value -  20
 #     max_width = 1500     # Optional, default value - 744
 # )
-# open_modal = st.button("plot", key = "p_1")
+# open_modal = st.button('plot', key = 'app1_butt_p_1')
 # if open_modal:
 #     modal.open()
 
 
 # if modal.is_open():
 #     with modal.container():
-#        fig = make_plot(db_t, db_d, fl_t, fl_d, c, col_dict, "BattV_Avg_Volts")
-#        st.plotly_chart(fig, use_container_width=True)
+#        fig = make_plot(db_t, db_d, fl_t, fl_d, c, col_dict, 'BattV_Avg_Volts')
+#        st.plotly_chart(fig, use_container_width=True, key = 'app1_fig_raw_modal')
 
 
 # convert columns with TimeStamps back to DateTime strings if they are not meant to be skipped
@@ -379,24 +372,24 @@ st.subheader('4. Update/initiate raw_ table')
 
 r1, r2 = st.columns(2)
 with r1:
-    b3 = st.button("Show the new/updated DataBase table")
+    b3 = st.button('Show the new/updated DataBase table', key = 'app1_butt_datFr_updRaw')
 with r2:
-    cb3 = st.checkbox('First 2 and last 10 rows', value = True, help = "Uncheck the box to show the entire table.", key = 'cb3')
+    cb3 = st.checkbox('First 2 and last 10 rows', value = True, help = 'Uncheck the box to show the entire table.', key = 'app1_chBox_firstlast10_updRaw')
 
 if b3 and cb3:
     tmp = pd.concat([c.head(2), c.tail(10)], ignore_index=False)
-    st.dataframe(tmp , hide_index = False)
+    st.dataframe(tmp , hide_index = False, key = 'app1_datFr_updRaw_firstlast10')
     del tmp
 elif b3:
-    st.dataframe(c)
+    st.dataframe(c, key = 'app1_datFr_updRaw_all')
 
 
 now = datetime.now()
-now = now.strftime("%Y%m%d")
+now = now.strftime('%Y%m%d')
 
-db_path_updated = st.text_input('Name for the new/updated DataBase table:', db_path + '_upd_' + now)
+db_path_updated = st.text_input('Name for the new/updated DataBase table:', db_path + '_upd_' + now, key = 'app1_textInp_updRawName')
 
-upload = st.button('Initiate/Update DataBase table', key = 'p_upd')
+upload = st.button('Initiate/Update DataBase table', key = 'app1_butt_pushUpdRaw')
 if upload:
     c_out = c.copy()
     c_out = c_out.reset_index()
@@ -411,10 +404,10 @@ if upload:
     with engine.connect() as con:
         con.execute(text('alter table ' + db_path_updated + ' add primary key (DateTime)'))
     
-    m3 = 'The table: "' + db_path_updated + '"' + 'is uploaded to the DataBase.'
     m1 = 'DataBase table "' + db_path + '" updated '
     m2 = 'using data from file "' + fl_path.name + '"'
-    mm = st.text_area(' ', m1 + '\n' + m2 + '\n' + m3)
+    m3 = 'The table: "' + db_path_updated + '"' + 'is uploaded to the DataBase.'
+    mm = st.text_area(' ', m1 + '\n' + m2 + '\n' + m3, key = 'app1_textarea_pushReport')
     
     if np.random.randint(0, 100)>50:
         st.balloons()
@@ -426,134 +419,6 @@ if upload:
     
 st.header('', divider='green')
 
-
-#_______________________
-st.subheader('5. Update clean_ table')
-st.markdown(':red[Stop! Have you forgotten Hourly2?]')
-st.write('If the logger generates more than one data table simultaneously, the clean_ table is to be updated only after when the raw_ table has been updated using all files from the data logger.')
-
-# if not 'mm' in locals():
-#     st.warning('To proceed update the raw_ table first!')
-#     st.stop()
-    
-sites, cols_S1, cols_S2, cols_S4, cols_S6 = sites_tables_cols()
-
-if   'raw_Steph1' in db_path:
-    ind = 0
-elif 'raw_Steph2' in db_path:
-    ind = 1
-elif 'raw_Steph4' in db_path:
-    ind = 2
-elif 'raw_Steph6' in db_path:
-    ind = 3
-clean_site = st.selectbox( "Choose site profile for generating the clean_ table ", sites, index = ind )
-if   clean_site == 'S1':
-        cols = cols_S1
-elif clean_site == 'S2':
-        cols = cols_S2
-elif clean_site == 'S4':
-        cols = cols_S4
-elif clean_site == 'S6':
-        cols = cols_S6
-
-if 'd_2' not in st.session_state:
-    st.session_state.d_0 = []   # data in raw_   format (existing table + AWS file) covering times in the AWS file and 15 days preceding it
-    st.session_state.d_2 = []   # data in clean_ format ...
-    st.session_state.D   = []   # data in clean_ format                             covering times NOT in the current clean_ table
-r1, r2, r3 = st.columns([0.4, 0.3, 0.3])
-with r1:
-    b41 = st.button('Generate data in clean_ format', key = 'p_gen_clean', help = "Using data from the raw_ table and AWS file a table in clean_ format will be generated for the times covered by the AWS file and 15 days preceding that.")
-with r2:
-    b42  = st.button("Show the clean_ table", help = 'Show data in clean_ format (made using existing table and the AWS file) covering times in the AWS file and 15 days preceding it.')
-with r3:
-    b43 = st.checkbox('First 2 and last 10 rows', value = True, help = 'Uncheck the box to show the entire table.', key = 'cb4')
-
-if b41:
-    t_max_f = fl_d.index[0] - timedelta(days = 15)
-    d_0 = c[c.index > t_max_f].reset_index()
-    st.session_state.d_0 = d_0
-    _, d_2 = raw_to_clean(cols, 4, d_0)
-    m = d_2.index.month > 9   # Add water year column
-    d_2.insert( 0, 'WatYr', d_2.index.year+1*m.astype(int) )
-    st.session_state.d_2 = d_2
-    
-    engine = create_engine(url)
-    with engine.connect() as connection:
-        t_max_c = connection.execute(text(f"SELECT MAX(DateTime) FROM {cols.columns[0]}"))
-    st.session_state.D = d_2[d_2.index>t_max_c.scalar()]
-
-if b42:
-    if len( st.session_state.d_2 ) == 0:
-        st.warning('To proceed generate clean_ table first!')
-        st.stop()
-    d_2 = st.session_state.d_2
-    if b43:
-        st.dataframe(pd.concat([d_2.head(2), d_2.tail(10)], ignore_index=False) , hide_index = False)
-    else:
-        st.dataframe(d_2)
-st.title('')
-
-# plotting
-
-if 'C' not in st.session_state:
-    st.session_state.C = []     # entire current UNupdated data in clean_ format
-v = st.selectbox( 'Choose variable to plot', cols.iloc[1:,0], index = 0 )     # v = "Air_Temp"
-if st.button('Plot', help = 'Plot data from raw and clean tables. Generating first plot takes longer as the current UNupdated clean_ table from the DataBase is to be downloaded.'):
-    if len( st.session_state.d_2 ) == 0:
-        st.warning('To proceed generate clean_ table first!')
-        st.stop()
-    if len( st.session_state.C ) == 0:
-        engine = create_engine(url)
-        with engine.connect() as connection:
-            st.session_state.C = pd.read_sql(f"SELECT * FROM {cols.columns[0]}", connection)
-        st.session_state.C.set_index('DateTime', inplace=True)
-    
-    fig = make_plot_clean_upd(cols, v, st.session_state.C, st.session_state.d_0, st.session_state.D)
-        
-    # fig.write_html('plot.html')
-    st.plotly_chart(fig, use_container_width=True)
-
-st.title('')
-
-
-b6 = st.button('Update clean_ table', key = 'p_upd_clean', help = "Append new data from raw_ table to the clean_ table.")
-st.session_state.D
-if b6:
-    
-    D_out = st.session_state.D.copy()
-    D_out = D_out.reset_index()
-    dtypes = {col: types.Float for col in c.columns if col != 'DateTime'}
-    dtypes['DateTime'] = types.DateTime
-    
-    engine = create_engine(url)
-    D_out.to_sql(name=cols.columns[0], con=engine, if_exists = 'append', index = False, dtype=dtypes)
-    
-    
-    st.text_area(' ', 'The table: "' + cols.columns[0] + '"' + ' is updated.')
-    
-    if np.random.randint(0, 100)>50:
-        st.balloons()
-    else:
-        st.snow()
-    st.cache_data.clear()
-    
-    
 st.stop()
-
     
-
-
-
-    
-
-
-
-
-# c_out = c
-# c_out.insert(0, 't', c_out.index)
-# c_out.reset_index(drop=True, inplace=True)
-
-# with engine.connect() as con:
-#     con.execute(text('alter table ' + db_path_updated + ' add primary key (t)'))
-    
-sys.exit()
+# sys.exit()

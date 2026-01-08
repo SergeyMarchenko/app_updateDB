@@ -6,7 +6,7 @@ from   sqlalchemy import create_engine
 
 # db_d = get_db(url, db_path)
 # db_d, db_h, db_coltyp = get_db(url, db_path)
-@st.cache_data(ttl = 120, show_spinner="Fetching table from SQL DataBase...")
+@st.cache_data(ttl = 120, show_spinner='Fetching table from SQL DataBase...')
 def get_db(url, db_path):
     engine = create_engine(url)
     with engine.connect() as connection:

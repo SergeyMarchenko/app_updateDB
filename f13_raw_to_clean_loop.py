@@ -1,71 +1,58 @@
 import streamlit  as st
 import pandas as pd
-from   f12_raw_to_clean  import raw_to_clean
+import numpy  as np
+from   f03_get_db            import get_db
+from   f12_raw_to_clean      import raw_to_clean
 
-# C = raw_to_clean_loop(cols, d_0)
-@st.cache_data(show_spinner="Processing raw tables...")
-def raw_to_clean_loop(cols, d_0):
-    d_1 = []
-    d_2 = []
-    for tb in range(4,cols.shape[1]):
-        d0 = d_0[tb-4]
-        d1, d2 = raw_to_clean(cols, tb, d0)  
-        d_1.append(d1)       # column-consistent and filtered
-        d_2.append(d2)       # resampled to an even 1h time grid
+# d0, c = raw_to_clean_loop(D, F, raw_tb_dl, url)
+@st.cache_data(show_spinner="Converting raw_ tables to clean_ format ...")
+def raw_to_clean_loop(D, F, raw_tb_dl, url):
+    d0  = {}        # downloaded data
+    # d1  = {}        # column-consistent and filtered
+    d2  = {}        # resampled to an even 1h time grid
+    c   = {}        # merged in one, if multiple raw_ tables are processed
+    for outer_key, inner_dict in raw_tb_dl.items():
+        # outer_key = 'S9'
+        # inner_dict = raw_tb_dl[outer_key]
+        d0[outer_key]  = {}
+        # d1[outer_key]  = {}
+        d2[outer_key]  = {}
+        c[ outer_key]  = {}
+        for inner_key in inner_dict.keys():
+            # inner_key = 'raw_UpperRussell_CSci'
+            if inner_dict[inner_key]:
+                d0[outer_key][inner_key], _, _ = get_db(url, inner_key)
+                # d0[outer_key][inner_key].reset_index(inplace=True)
+                d0[outer_key][inner_key] = d0[outer_key][inner_key].where(d0[outer_key][inner_key].notna(), np.nan)
+                for col in d0[outer_key][inner_key].select_dtypes(include=['object']).columns:
+                    d0[outer_key][inner_key][col] = pd.to_numeric(d0[outer_key][inner_key][col], errors='coerce').astype('float64')
+                # d1[outer_key][inner_key], d2[outer_key][inner_key] = raw_to_clean(D[outer_key], inner_key, d0[outer_key][inner_key])
+                
+                _, d2[outer_key][inner_key] = raw_to_clean(D[outer_key], F[outer_key][inner_key], inner_key, d0[outer_key][inner_key])
+        
+                # if more than one clean_ table were created, merge them in one.
+                # for overlapping time steps:
+                # data from raw_ tables with names appearing to the left  in the header row of the cols variable overwrites
+                # data from raw_ tables with names appearing to the right in the header row of the cols variable
+                c[outer_key] = d2[outer_key][inner_key].copy()
+        
+        if len(d2[outer_key])>1:
+            inner_keys = list(d2[outer_key].keys())
+            for inner_key in reversed(inner_keys[:-1]):
+                tmp = d2[outer_key][inner_key]
+                c[outer_key].update(tmp)
+                # c[outer_key] = pd.concat([c[outer_key], d2[outer_key][inner_key].loc[~d2[outer_key][inner_key].index.isin(c[outer_key].index)]])
+                missing_idx = tmp.index.difference(c[outer_key].index)
+                if not missing_idx.empty:
+                    c[outer_key] = pd.concat([c[outer_key], tmp.loc[missing_idx]])
+        
+        # Add water year column
+        m = c[outer_key].index.month > 9
+        c[outer_key].insert( 0, 'WatYr', c[outer_key].index.year+1*m.astype(int) )
+        
+        if len(D)>1:
+            d0[outer_key]  = {}
+        d2[outer_key]  = {}
+
     
-    # merge tables in one starting from the tail of header row in cols
-    C = d_2[-1].copy()
-    if len(d_2)>1:
-        for i in range(len(d_2)-1,0,-1):
-            C.update(d_2[i-1])
-            C = pd.concat([C, d_2[i-1].loc[~d_2[i-1].index.isin(C.index)]])
-
-    # Add water year column
-    m = C.index.month > 9
-    C.insert( 0, 'WatYr', C.index.year+1*m.astype(int) )
-
-    
-    return C
-
-#))))))))))
-# import matplotlib.pyplot as plt
-# from   matplotlib.widgets import CheckButtons
-# c = 6
-# fig, ax = plt.subplots()
-
-# hobo_0h, = ax.plot( d_0[1].iloc[:,0], d_0[1].iloc[:,11], color='black', marker='.', label='hobo_0' )
-# csci_0h, = ax.plot( d_0[0].iloc[:,0], d_0[0].iloc[:,18], color='red'  , marker='.', label='csci_0' )
-
-# hobo_1h, = ax.plot( d_1[1].index, d_1[1].iloc[:,c], color='black', marker='o', markersize=5, markerfacecolor='none', markeredgewidth=1,label='hobo_1' )
-# csci_1h, = ax.plot( d_1[0].index, d_1[0].iloc[:,c], color='red'  , marker='o', markersize=5, markerfacecolor='none', markeredgewidth=1,label='csci_1' )
-
-# hobo_2h, = ax.plot( d_2[1].index, d_2[1].iloc[:,c], color='black', marker='*', label='hobo_2' )
-# csci_2h, = ax.plot( d_2[0].index, d_2[0].iloc[:,c], color='red'  , marker='*', label='csci_2' )
-# combo_h, = ax.plot(      C.index,      C.iloc[:,c], color='blue' , marker='.', label='combo' )
-
-
-# plt.title( C.columns[c] )
-# ax.legend()
-# rax = plt.axes([0, 0.4, 0.15, 0.20], frameon=False)
-
-# check = CheckButtons(rax, labels=['hobo_0', 'csci_0', 'hobo_1', 'csci_1', 'hobo_2', 'csci_2', 'combo'], actives=[True, True, True, True, True, True, True])
-
-# # Function to handle the visibility toggle
-# def toggle_visibility(label):
-#     lines[label].set_visible(not lines[label].get_visible())
-#     plt.draw()
-
-# # Connect the check buttons to the toggle function
-# check.on_clicked(toggle_visibility)
-
-# # Store the lines in a dictionary for easy access
-# lines = {'hobo_0': hobo_0h,
-#           'csci_0': csci_0h,
-#           'hobo_1': hobo_1h,
-#           'csci_1': csci_1h,
-#           'hobo_2': hobo_2h,
-#           'csci_2': csci_2h,
-#           'combo':  combo_h}
-
-# plt.close('all')
-# del c, fig, ax, hobo_0h, csci_0h, hobo_1h, csci_1h, hobo_2h, csci_2h, combo_h, rax, lines
+    return d0, c

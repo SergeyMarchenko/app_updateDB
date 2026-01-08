@@ -14,16 +14,15 @@ def make_plot_t(db_t, fl_t):
     # db_t = db_d.index.tolist()
     # fl_t = fl_d.index.tolist()
             
-    t_aws     = go.Scatter(x=[fl_t[0], fl_t[-1]], y=[1, 1], name='AWS file'      , mode='lines+markers')
+    t_aws     = go.Scattergl(x=fl_t, y=[1]* len(fl_t), name='AWS file', mode='markers')
     t_aws.marker     = dict(color = 'rgba(204,  0,   0, 1)', size = 4, line = dict(color = 'rgba(204,  0,   0, 1)', width = 1))
-    t_aws.line       = dict(color = 'rgba(204,  0,   0, 1)', width = 2 )
 
     fig_t = go.Figure(data=t_aws)
     
     if db_t:
-        t_dbt = go.Scatter(x=[db_t[0], db_t[-1]], y=[2, 2], name='DataBase table', mode='lines+markers')
+        t_dbt = go.Scattergl(x=db_t, y=[2]*len(db_t), name='DataBase table', mode='markers')
         t_dbt.marker = dict(color = 'rgba( 11, 83, 148, 1)', size = 4, line = dict(color = 'rgba( 11, 83, 148, 1)', width = 1))
-        t_dbt.line   = dict(color = 'rgba( 11, 83, 148, 1)', width = 2 )
+        
         fig_t.add_trace(t_dbt)
     
         

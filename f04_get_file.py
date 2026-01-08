@@ -1,6 +1,7 @@
 import numpy     as np
 import pandas    as pd
 import streamlit as st
+import math
 
 # fl_d0                 = get_file_prelim( fl_path, delim)
 # fl_d, fl_h, fl_coltyp = get_file_defined(fl_d0, tcol, dcol, hrow, urow, drow)
@@ -76,19 +77,19 @@ def get_file_defined(fl_d0, tcol, toff, dcol, hrow, urow, drow):
 
 
     fl_h = fl_d0.iloc[hrow,dcol].tolist()       # extract the rows with headers and units and merge them in one variable
-    if np.isnan(urow):
-        fl_u = ['' for _ in range(len(dcol))]
-    else:
+    if ~np.isnan(urow):
         fl_u = fl_d0.iloc[urow,dcol].tolist()
-                                  
+        fl_u = ['' if isinstance(x, float) and math.isnan(x) else x for x in fl_u]
+                                   
     for i in range(0,len(fl_h)):                
         fl_h[i] = fl_h[i].strip()
-        fl_h[i] = fl_h[i].replace(" ", "_")
-        if not pd.isna(fl_u[i]):
-            fl_u[i] = fl_u[i].strip()
-            fl_u[i] = fl_u[i].replace(" ", "_")
-            fl_h[i] = fl_h[i] + '_' + fl_u[i]
-    del i, fl_u
+        fl_h[i] = fl_h[i].replace(' ', '_')
+        if ~np.isnan(urow):
+            if len(fl_u[i])>0:
+                fl_u[i] = fl_u[i].strip()
+                fl_u[i] = fl_u[i].replace(' ', '_')
+                fl_h[i] = fl_h[i] + '_' + fl_u[i]
+    del i
     fl_d = fl_d.rename(columns=dict(zip(fl_d.columns, fl_h)))
     
     
