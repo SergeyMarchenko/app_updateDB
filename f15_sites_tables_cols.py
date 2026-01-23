@@ -4,7 +4,7 @@ import pandas    as pd
 def sites_tables_cols():
     
     
-    tables_S1 = ['clean_Steph1'  ,'aggregation_method'  , 'raw_Steph1_CSci'  ,'raw_Steph1_hobo']
+    tables_S1 = ['clean_steph1'  ,'aggregation_method'  , 'raw_Steph1_CSci'  ,'raw_Steph1_hobo']
     cols_S1 = [
     ['DateTime'         ,''           ,'DateTime'            ,'DateTime'                                ],
     ['Air_Temp'	    	,'mean'       ,'AirTemp_Avg_Deg_C'   ,'Temp_degC'                               ],
@@ -46,7 +46,7 @@ def sites_tables_cols():
     # 'Rain_(liquid)_counts', 'Rain_(liquid)_conversion_coeff_mm_tip^-1', 'Rain_(liquid)_water_layer_thickness_mm',
     # 'Lysimeter_counts', 'Lysimeter_conversion_coeff_mm_tip^-1', 'Lysimeter_water_layer_thickness_mm'
 
-    tables_S2 = ['clean_Steph2'  ,'aggregation_method', 'raw_Steph2_CSci']
+    tables_S2 = ['clean_steph2'  ,'aggregation_method', 'raw_Steph2_CSci']
     cols_S2 = [
     ['DateTime'         ,''           ,'DateTime'           ],
     ['Air_Temp'	    	,'mean'       ,'AirTemp_Avg_Deg_C'  ],
@@ -82,7 +82,7 @@ def sites_tables_cols():
     # 'Lys_Counts_Tot', 'Lys_Tot_mm',
 
 
-    tables_S3 = ['clean_Steph3'  ,'aggregation_method', 'raw_Steph3_CSci']
+    tables_S3 = ['clean_steph3'  ,'aggregation_method', 'raw_Steph3_CSci']
     cols_S3 = [
     ['DateTime'         ,''           ,'DateTime'           ],
     ['Air_Temp'	    	,'mean'       ,'Air_Temp'           ],
@@ -112,7 +112,7 @@ def sites_tables_cols():
     # 'Lysimeter', 'Rain', 'Solar_Rad', 'Snow_Depth', 'Current', 'Air_Temp', 'RH', 'Wind_Speed', 'Gust_Speed', 'Wind_Dir', 'Backup_Batt', 'BattV_Min', 'WindDir_SD'
 
 
-    tables_S4 = ['clean_Steph4'  ,'aggregation_method', 'raw_Steph4_CSci', 	'raw_Steph4_hobo']
+    tables_S4 = ['clean_steph4'  ,'aggregation_method', 'raw_Steph4_CSci', 	'raw_Steph4_hobo']
     cols_S4 = [
     ['DateTime'         ,''           ,'DateTime'          ,'DateTime'                                 ],
     ['Air_Temp'	    	,'mean'       ,'AirTemp_Avg_Deg_C' ,'temp_degC'                                ],
@@ -153,7 +153,7 @@ def sites_tables_cols():
     # 'Solar_Radiation_W_m^-2', 'Snow_depth_cm', 'SoilTempBattery_V', 'SoilTemp_degC'
 
 
-    tables_S5 = ['clean_Steph5'  ,'aggregation_method', 'raw_Steph5_CSci']
+    tables_S5 = ['clean_steph5'  ,'aggregation_method', 'raw_Steph5_CSci']
     cols_S5 = [
     ['DateTime'         ,''           ,'DateTime'           ],
     ['Air_Temp'	    	,'mean'       ,'AirT_Avg_degC'      ],
@@ -186,7 +186,7 @@ def sites_tables_cols():
     # 'WindSpd_Max_m/s', 'WindSpd_m/s', 'WindDir_deg', 'WindDir_SD_m/s'
 
 
-    tables_S6 = ['clean_Steph6'  ,'aggregation_method', 'raw_Steph6_CSci', 	'raw_Steph6_hobo']
+    tables_S6 = ['clean_steph6'  ,'aggregation_method', 'raw_Steph6_CSci', 	'raw_Steph6_hobo']
     cols_S6 = [
     ['DateTime'         ,''           ,'DateTime'          ,'DateTime'                               ],
     ['Air_Temp'	    	,'mean'       ,'AirTemp_Avg_Deg_C' ,'temp_degC'                              ],
@@ -230,7 +230,7 @@ def sites_tables_cols():
     # 'Soil_Temp_1_degC', 'Soil_Temp_2_degC', 'Soil_Temp_3_degC'
 
 
-    tables_S7 = ['clean_Steph7'  ,'aggregation_method', 'raw_Steph7_CSci', 	'raw_Steph7_hobo']
+    tables_S7 = ['clean_steph7'  ,'aggregation_method', 'raw_Steph7_CSci', 	'raw_Steph7_hobo']
     cols_S7 = [
     ['DateTime'         ,''           ,'DateTime'          ,'DateTime'                               ],
     ['Air_Temp'	    	,'mean'       ,'AirTemp_Avg_Deg_C' ,'Air_Temp_degC'                          ],
@@ -271,7 +271,7 @@ def sites_tables_cols():
     # 'Judd_snow_depth_readings', 'Snow_depth_cm'
 
     
-    tables_S8 = ['clean_Steph8'  ,'aggregation_method', 'raw_Steph8_CSci', 	'raw_Steph8_hobo']
+    tables_S8 = ['clean_steph8'  ,'aggregation_method', 'raw_Steph8_CSci', 	'raw_Steph8_hobo']
     cols_S8 = [
     ['DateTime'         ,''           ,'DateTime'          ,'DateTime'                                  ],
     ['Air_Temp'	    	,'mean'       ,'AirTemp_Avg_Deg_C' ,'Air_Temperature_degC'                      ],
@@ -314,7 +314,7 @@ def sites_tables_cols():
 #   'Rain_(liquid)_tipper_counts', 'Rain_(liquid)_conversion_coeff_mm_tip^-1', 'Rain_(liquid)_water_layer_thickness_mm'
 	
 
-    tables_S9 = ['clean_UpperRussell'  ,'aggregation_method', 'raw_UpperRussell_CSci']
+    tables_S9 = ['clean_upperrussell'  ,'aggregation_method', 'raw_UpperRussell_CSci']
     cols_S9 = [
     ['DateTime'         ,''           ,'DateTime'      ],
     ['Air_Temp'	    	,'mean'       ,'Air_Temp'      ],
@@ -348,7 +348,7 @@ def sites_tables_cols():
     # 'Snow_Depth', 'Solar_Rad', 'River_Thick', 'River_Thick_SD'
     
     
-    tables_S10 = ['clean_RussellMain' ,'aggregation_method', 'raw_RussellMain_hobo']
+    tables_S10 = ['clean_russellmain' ,'aggregation_method', 'raw_RussellMain_hobo']
     cols_S10 = [
     ['DateTime'         ,''           ,'DateTime'                               ],
     ['Air_Temp'	    	,'mean'       ,'AirTemp_degC'                           ],

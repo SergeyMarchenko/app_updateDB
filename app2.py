@@ -25,7 +25,7 @@ st.header('Convert tables from raw_ to clean_ format.', divider='green')
 #__________________________________________
 st.write('1. Access DataBase')
 path_config = st.file_uploader('Path to config.csv file with credentials to access the DataBase:', key = 'app2_fileUpl')
-# path_config = 'Z:/FLNRO/Russell Creek/Data/DB/code_2_db/config1.csv'
+# path_config = 'Z:/FLNRO/Russell Creek/Data/DB/code_2_db/config.csv'
 if not path_config:
     st.warning('To proceed upload the file "config.csv" first!')
     st.stop()
@@ -73,7 +73,7 @@ if not sites:
   st.stop()
   
 sites = tuple(sites)
-# sites = ('S9',)
+# sites = ('S1',)
 # sites = ('All sites',)
 if 'All sites' in sites:
     sites = tuple(D.keys())
@@ -110,6 +110,9 @@ raw_tb_dl = {site: {k2: False for k2 in raw_table} for site, raw_table in F.item
 if len(D) == 1:
     for key in raw_tb_dl[sites[0]]:
         raw_tb_dl[sites[0]][key] = st.checkbox(key, value=raw_tb_dl[sites[0]][key], help='Checking the box includes corresponding tables in processing loop. Tables are listed as headers of columns 5... in the table above', key = 'app2_chBox_includeRawTable'+key)
+# key = list(raw_tb_dl[sites[0]].keys())
+# raw_tb_dl[sites[0]][key[0]] = True
+# raw_tb_dl[sites[0]][key[1]] = True
 
 # all_latest = 'all'
 # all_latest = 'only latest'
@@ -284,12 +287,12 @@ if len(c) == 1:
 #__________________________________________
 #____ Update existing DB table
 #__________________________________________
-st.write('4. Upload generated table ' + D[sites[0]].columns[0])
+st.write('4. Upload generated table(s)')
 
 if   rb == 'create new':
-    b_upl_help_text = 'Generated table '   + D[sites[0]].columns[0] + ' will be uploaded to DB. If DB already contains a table with the same name, it will be overwritten.'
+    b_upl_help_text = 'Generated table '   + D[sites[0]].index.name + ' will be uploaded to DB. If DB already contains a table with the same name, it will be overwritten.'
 elif rb == 'update existing':
-    b_upl_help_text = 'Existing DB table ' + D[sites[0]].columns[0] + ' will be updated using the newly generated table based on DateTime values in rows: rows with new DateTime values are appended, rows with existing DateTime values and deviating column values will overwrite rows in DB table.'
+    b_upl_help_text = 'Existing DB table ' + D[sites[0]].index.name + ' will be updated using the newly generated table based on DateTime values in rows: rows with new DateTime values are appended, rows with existing DateTime values and deviating column values will overwrite rows in DB table.'
     
 if st.button('Upload clean_ !', help = b_upl_help_text, key = 'app2_butt_UpdateClean'):
     
@@ -301,11 +304,11 @@ if st.button('Upload clean_ !', help = b_upl_help_text, key = 'app2_butt_UpdateC
             dtypes['DateTime'] = types.DateTime
             dtypes['WatYr'   ] = types.INTEGER
             engine = create_engine(url)
-            co.to_sql(name=D[site_key].columns[0], con=engine, if_exists = 'replace', index = False, dtype=dtypes)
+            co.to_sql(name=D[site_key].index.name, con=engine, if_exists = 'replace', index = False, dtype=dtypes)
             with engine.connect() as con:
-                con.execute(text('alter table ' + D[site_key].columns[0] + ' add primary key (DateTime)'))
+                con.execute(text('alter table ' + D[site_key].index.name + ' add primary key (DateTime)'))
             
-            st.success( 'The DataBase table: "' + D[site_key].columns[0] + '" was replaced using data from table ' + ", ".join([f'"{k}"' for k, v in raw_tb_dl.items() if v]) + ' in clean_ format' )
+            st.success( 'The DataBase table: "' + D[site_key].index.name + '" was replaced using data from table ' + ", ".join([f'"{k}"' for k, v in raw_tb_dl[site_key].items() if v]) + ' in clean_ format' )
 
     
     if  rb == 'update existing':
@@ -344,7 +347,7 @@ if st.button('Upload clean_ !', help = b_upl_help_text, key = 'app2_butt_UpdateC
             
             del co, engine, cols, col_list, update_list, merge_sql
             
-            st.success( 'The DataBase table: "' + D[site_key].columns[0] + '" was updated using data from table ' + ", ".join([f'"{k}"' for k, v in raw_tb_dl.items() if v]) )
+            st.success( 'The DataBase table: "' + D[site_key].index.name + '" was updated using data from table ' + ", ".join([f'"{k}"' for k, v in raw_tb_dl[site_key].items() if v]) )
 
 
     if np.random.randint(0, 100)>50:
