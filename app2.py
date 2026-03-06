@@ -2,6 +2,8 @@
 # cd Z:\FLNRO\Russell Creek\Data\DB\code_2_db\c02_app
 # streamlit run app2.py
 
+# update only this line 2026 03 06
+
 
 # import os
 # os.chdir('Z:\FLNRO\Russell Creek\Data\DB\code_2_db\c02_app')
